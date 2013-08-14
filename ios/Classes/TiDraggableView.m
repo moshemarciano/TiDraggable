@@ -40,6 +40,8 @@
 
     if (self) {
         isDraggable = YES;
+        ensureRight = YES;
+        ensureBottom = YES;
 
         UIPanGestureRecognizer *panRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panDetected:)];
 
@@ -124,6 +126,16 @@
 
         [(TiDraggableViewProxy*)[self proxy] setTop:[NSNumber numberWithFloat:top]];
         [(TiDraggableViewProxy*)[self proxy] setLeft:[NSNumber numberWithFloat:left]];
+
+        if (ensureRight)
+        {
+            [(TiDraggableViewProxy*)[self proxy] setRight:[NSNumber numberWithFloat:-left]];
+        }
+        
+        if (ensureBottom)
+        {
+            [(TiDraggableViewProxy*)[self proxy] setBottom:[NSNumber numberWithFloat:-top]];
+        }
 
         if([self.proxy _hasListeners:@"start"] && [panRecognizer state] == UIGestureRecognizerStateBegan)
         {
@@ -213,6 +225,16 @@
 - (void)setDraggable_:(id)args
 {
     isDraggable = [TiUtils boolValue:args];
+}
+
+- (void)setEnsureRight_:(id)args
+{
+    ensureRight = [TiUtils boolValue:args];
+}
+
+- (void)setEnsureBottom_:(id)args
+{
+    ensureBottom = [TiUtils boolValue:args];
 }
 
 - (void)setCanRotate_:(id)args

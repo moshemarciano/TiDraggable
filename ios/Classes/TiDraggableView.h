@@ -31,6 +31,8 @@
 	CGFloat minTop;
 
 	BOOL isDraggable;
+    BOOL ensureBottom;
+	BOOL ensureRight;
     BOOL hasMaxLeft;
     BOOL hasMaxTop;
     BOOL hasMinLeft;
