@@ -21,46 +21,21 @@
 
 @interface TiDraggableView : TiUIView<UIGestureRecognizerDelegate>
 {
+	NSString *axis;
 
-	// variables used in the DraggableView
-	BOOL firstTime;
-
-	CGPoint beginCenter;
-
-	CGPoint offset;
-	CGPoint locationStart;
-	CGPoint location;
-	
-	UITouch *touchMove;
-	UITouch *touchStart;
-	
-	CGFloat width;
-	CGFloat height;
 	CGFloat left;
 	CGFloat top;
-	
-	CGFloat offsetX;
-	CGFloat offsetY;
-	
-	CGFloat oldLeft;
-	CGFloat newLeft;
-	CGFloat oldTop;
-	CGFloat newTop;
-	
 	CGFloat maxLeft;
 	CGFloat minLeft;
 	CGFloat maxTop;
 	CGFloat minTop;
-	
+
+	BOOL isDraggable;
     BOOL hasMaxLeft;
     BOOL hasMaxTop;
     BOOL hasMinLeft;
     BOOL hasMinTop;
-    BOOL isDraggable;
-    
-	NSString *axis;
-	
-	BOOL hasMoved;
+    BOOL hasMoved;
 }
 
 @end
