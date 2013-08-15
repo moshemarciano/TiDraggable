@@ -131,7 +131,7 @@
         {
             [(TiDraggableViewProxy*)[self proxy] setRight:[NSNumber numberWithFloat:-left]];
         }
-        
+
         if (ensureBottom)
         {
             [(TiDraggableViewProxy*)[self proxy] setBottom:[NSNumber numberWithFloat:-top]];
@@ -148,6 +148,10 @@
         else if([self.proxy _hasListeners:@"end"] && [panRecognizer state] == UIGestureRecognizerStateEnded)
         {
             [self.proxy fireEvent:@"end" withObject:tiProps];
+        }
+        else if([self.proxy _hasListeners:@"cancel"] && [panRecognizer state] == UIGestureRecognizerStateCancelled)
+        {
+            [self.proxy fireEvent:@"cancel" withObject:tiProps];
         }
     }
 }
