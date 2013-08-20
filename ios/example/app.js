@@ -1,115 +1,96 @@
-/*
- *   Copyright 2012 Pedro Enrique
+/*global require,console,Ti*/
+/*jslint devel: true, forin: true */
+
+/**
+ * An enhanced fork of the original TiDraggable module by Pedro Enrique,
+ * allows for simple creation of "draggable" views.
  *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
+ * Copyright (C) 2013 Seth Benjamin
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * -- Original License --
+ *
+ * Copyright 2012 Pedro Enrique
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
+(function () {
+    'use strict';
 
-var Draggable = require('ti.draggable');
+    var Draggable = require('ti.draggable'),
+        mainWindow = Ti.UI.createWindow({
+            backgroundColor : 'white',
+            exitOnClose : true
+        }),
+        subscribe = function (proxy, observer) {
+            var key, events, eIndex;
 
-var WIDTH = 320;
-var HEIGHT = 460;
+            for (key in observer) {
+                if (typeof observer[key] === 'function') {
+                    events = key.split(' ');
 
-var win = Ti.UI.createWindow({
-	backgroundColor:'#ccc'
-});
+                    for (eIndex in events) {
+                        proxy.addEventListener(events[eIndex], observer[key]);
+                    }
+                }
+            }
+        },
+        createDraggableSquare = function (name, color, axis) {
+            var view = Draggable.createView({
+                    width : 100,
+                    height : 100,
+                    axis : axis,
+                    borderRadius : 3,
+                    minLeft : 0,
+                    maxLeft : Ti.Platform.displayCaps.platformWidth - 100,
+                    minTop : 0,
+                    maxTop : Ti.Platform.displayCaps.platformHeight - 120,
+                    backgroundColor : color || 'black'
+                });
 
-function Label(text){
-	return Ti.UI.createLabel({height:20,left:10,right:10,backgroundColor:'white', textAlign:'center', text: text});
-}
+            view.add(Ti.UI.createLabel({
+                text : name
+            }));
 
-var horizontal = Draggable.createView({
-	left:0,
-	top:0,
-	width:100,
-	height:100,
-	backgroundColor:'red',
-    minLeft:0,
-    maxLeft:WIDTH-100,
-	axis:'x'
-});
+            subscribe(view, {
+                'start move end cancel' : function (e) {
+                    console.log(
+                        'Event: ' + e.type,
+                        'Left: ' + e.left,
+                        'Top: ' + e.top
+                    );
+                }
+            });
 
+            return view;
+        };
 
-horizontal.add(Label('horizontal'));
+    mainWindow.add(createDraggableSquare('Horizontal', 'red', 'x'));
+    mainWindow.add(createDraggableSquare('Vertical', 'blue', 'y'));
+    mainWindow.add(createDraggableSquare('Free', 'green'));
 
-var vertical = Draggable.createView({
-	left:0,
-	top:0,
-	width:100,
-	height:100,
-	backgroundColor:'green',
-    minTop:0,
-	maxTop:HEIGHT-100,
-	axis:'y'
-});
-vertical.add(Label('vertical'));
-
-var free = Draggable.createView({
-	top:0,
-	left:0,
-	width:100,
-	height:100,
-	canResize:true,
-	canRotate:true,
-	backgroundColor:'blue'
-});
-free.add(Label('free'));
-
-free.addEventListener('end', function(e){
-	Ti.API.info(e);
-});
-free.addEventListener('start', function(e){
-	Ti.API.info(e);
-});
-
-var views = [];
-var num = 0;
-for(var i = 0; i < 20; i++){
-	num = (i+1);
-	if(num<100){
-		num > 9 ? num='0'+num : num='00'+num;
-	}
-
-	views.push(
-		i % 2 ?
-		Ti.UI.createView({
-			height:100,
-			width:100,
-			backgroundColor:"#"+((1<<24)*Math.random()|0).toString(16)
-		})
-		:
-		Ti.UI.createImageView({
-			height:100,
-			width:150,
-			image:'http://pec1985.com/tests/album/WallPaper'+num+'.jpg'
-		})
-
-	);
-}
-var otherView = Ti.UI.createView({
-	width:200,
-	height:75,
-	backgroundColor:'black'
-});
-otherView.add(Ti.UI.createLabel({color:'white',text:'this is a child label'}));
-
-views.push(otherView);
-
-win.add(vertical);
-win.add(free);
-win.add(horizontal);
-
-win.open();
-
-
+    mainWindow.open();
+}());
