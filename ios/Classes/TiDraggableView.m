@@ -118,7 +118,8 @@
             {
                 imageViewPosition.x = minLeft + size.width / 2;
             }
-            else if(hasMaxTop && imageViewPosition.y - size.height / 2 > maxTop)
+
+            if(hasMaxTop && imageViewPosition.y - size.height / 2 > maxTop)
             {
                 imageViewPosition.y = maxTop + size.height / 2;
             }
