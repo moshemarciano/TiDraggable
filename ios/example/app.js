@@ -12,7 +12,7 @@
  *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
- *   
+ *
  */
 
 
@@ -86,7 +86,7 @@ for(var i = 0; i < 20; i++){
 		Ti.UI.createView({
 			height:100,
 			width:100,
-			backgroundColor:"#"+((1<<24)*Math.random()|0).toString(16)		
+			backgroundColor:"#"+((1<<24)*Math.random()|0).toString(16)
 		})
 		:
 		Ti.UI.createImageView({
@@ -94,7 +94,7 @@ for(var i = 0; i < 20; i++){
 			width:150,
 			image:'http://pec1985.com/tests/album/WallPaper'+num+'.jpg'
 		})
-		
+
 	);
 }
 var otherView = Ti.UI.createView({
@@ -105,20 +105,6 @@ var otherView = Ti.UI.createView({
 otherView.add(Ti.UI.createLabel({color:'white',text:'this is a child label'}));
 
 views.push(otherView);
-
-var scroll = Draggable.createInfiniteScroll({
-	height:100,
-	bottom:0,
-	left:0,
-	right:0,
-	views:views
-});
-
-scroll.addEventListener('click', function(e){
-	Ti.API.info(e);
-});
-
-win.add(scroll);
 
 win.add(vertical);
 win.add(free);
