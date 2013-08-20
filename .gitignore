@@ -1,2 +1,6 @@
-build
+android/dist
+ios/build
+
 .DS_Store
+*.zip
+*.xcuserdatad
