@@ -1,17 +1,38 @@
-//
-//  Copyright 2012 Pedro Enrique
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
+/**
+ * An enhanced fork of the original TiDraggable module by Pedro Enrique,
+ * allows for simple creation of "draggable" views.
+ *
+ * Copyright (C) 2013 Seth Benjamin
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * -- Original License --
+ *
+ * Copyright 2012 Pedro Enrique
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #import "TiDraggableModule.h"
 #import "TiBase.h"
@@ -22,13 +43,11 @@
 
 #pragma mark Internal
 
-// this is generated for your module, please do not change it
 -(id)moduleGUID
 {
 	return @"e8c13998-8fa8-4cee-8078-353c27e84d19";
 }
 
-// this is generated for your module, please do not change it
 -(NSString*)moduleId
 {
 	return @"ti.draggable";
@@ -38,28 +57,18 @@
 
 -(void)startup
 {
-	// this method is called when the module is first loaded
-	// you *must* call the superclass
 	[super startup];
-	
-	NSLog(@"[INFO] %@ loaded",self);
 }
 
 -(void)shutdown:(id)sender
 {
-	// this method is called when the module is being unloaded
-	// typically this is during shutdown. make sure you don't do too
-	// much processing here or the app will be quit forceably
-	
-	// you *must* call the superclass
 	[super shutdown:sender];
 }
 
-#pragma mark Cleanup 
+#pragma mark Cleanup
 
 -(void)dealloc
 {
-	// release any resources that have been retained by the module
 	[super dealloc];
 }
 
@@ -67,8 +76,6 @@
 
 -(void)didReceiveMemoryWarning:(NSNotification*)notification
 {
-	// optionally release any resources that can be dynamically
-	// reloaded once memory is available - such as caches
 	[super didReceiveMemoryWarning:notification];
 }
 

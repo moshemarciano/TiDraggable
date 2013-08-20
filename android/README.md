@@ -1,64 +1,32 @@
-Demo Video:
+# [TiDraggable](https://github.com/animecyc/TiDraggable) - Native Draggable Views
 
-http://www.screenr.com/2Y08
+An enhanced fork of the original [TiDraggable](https://github.com/pec1985/TiDraggable) module by [Pedro](http://twitter.com/pecdev) [Enrique](https://github.com/pec1985), allows for simple creation of "draggable" views.
 
----
+## Installation
 
-## How to install the module:
+In your `tiapp.xml` file add the following to the `modules` node:
 
-1. Create a new property in tiapp.xml:
+	<module version="1.2.4" platform="android">ti.draggable<module>
 
-```
-    <module version="1.0" platform="android">ti.draggable</module>
-```
+## Usage
 
-2. Copy the zip file found in the ```dist``` folder to the root of your project.
-3. require the module in your application:
+```javascript
+var Draggable = require('ti.draggable'),
+    mainWindow = Ti.UI.createWindow({
+        backgroundColor : 'white'
+    }),
+    draggableView = Draggable.createView({
+        width : 100,
+        height : 100,
+        backgroundColor : 'black'
+    });
 
-```
-var Draggable = require('ti.draggable');
-```
-
-4. Clean your build directory
-5. Build.
-
-## How to use the module
-To create a draggable view, simple create it like so:
-
-```
-   var view = Draggable.createView({ _props });
+mainWindow.add(draggableView);
+mainWindow.open();
 ```
 
-Keep in mind that the draggable view has the draggable properties already build in; if nothing is specified, it will be draggable all over the screen.
+## Credits & Notes
 
-## Draggable View Properties:
+> If you are building the Android module, make sure you update the .classpath and build.properties files to match your setup.
 
-### These will make the view stop at their corresponding positions
-
-* maxLeft: (int)
-* minLeft: (int)
-* maxTop: (int)
-* minTop: (int)
-
-### This will make the view stick to it's axis:
-
-* axis: (String) "x" or "y"
-
-### isDraggable ( bool ) { default: true }
-
-* Wether the view can will be draggable
-
-## Event Listeners
-
-1. start: will fire on touch start
-2. move: will fire on touch move
-3. stop: will fire on touch end
-
-
-## How to build the module from source
-1. Open the ```.classpath``` file and modify the parameters
-2. Do the same thing with the build.properties
-3. Read the Android Module Development Guide found in Appcelerator's wiki
-
-## TODOS
-Let's add more functionality to this module. I don't have a list of "todos", but please, feel free to add to it. Be creative, have ideas, submit pull requests.
+The work is largely based on [Pedro](http://twitter.com/pecdev) [Enrique's](https://github.com/pec1985) [TiDraggable](https://github.com/pec1985/TiDraggable) module license under the MIT (V2) license.
