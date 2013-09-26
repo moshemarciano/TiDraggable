@@ -33,7 +33,7 @@ mainWindow.add(draggableView);
 mainWindow.open();
 ```
 
-    If you are building the Android module, make sure you update the .classpath and build.properties files to match your setup.
+> If you are building the Android module, make sure you update the .classpath and build.properties files to match your setup.
 
 ## Module Reference
 
@@ -109,7 +109,7 @@ Sets the view to be rotateable. (two-finger rotate gesture)
 - canRotate (Boolean):
     - Boolean flag to enable or disable rotation.
 
-> Note: This method has not been implement for Android.
+> Note: This method has not been implemented for Android.
 
 ### DraggableView.setCanResize(canResize);
 
@@ -118,7 +118,7 @@ Sets the view to be scaleable (two-finger pinch gesture).
 - canResize (Boolean):
     - Boolean flag to enable or disable resizing.
 
-> Note: This method has not been implement for Android.
+> Note: This method has not been implemented for Android.
 
 ## Credits & Notes
 
