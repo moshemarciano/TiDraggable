@@ -42,7 +42,10 @@ extern NSData * dataWithHexString (NSString * hexString);
 
 - (NSData*) moduleAsset
 {
-	return nil;
+	//##TI_AUTOGEN_BEGIN asset
+	//Compiler generates code for asset here
+	return nil; // DEFAULT BEHAVIOR
+	//##TI_AUTOGEN_END asset
 }
 
 @end
