@@ -35,9 +35,10 @@
  */
 
 #import "TiModule.h"
+#import "TiBase.h"
+#import "TiHost.h"
+#import "TiUtils.h"
 
 @interface TiDraggableModule : TiModule
-{
-}
 
 @end

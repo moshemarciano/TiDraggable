@@ -1,6 +1,8 @@
+ios/build/*
+android/build/*
 android/dist
-ios/build
 
 .DS_Store
 *.zip
 *.xcuserdatad
+*.xccheckout

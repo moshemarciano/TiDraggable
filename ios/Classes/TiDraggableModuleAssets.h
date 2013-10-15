@@ -35,8 +35,6 @@
  */
 
 @interface TiDraggableModuleAssets : NSObject
-{
-}
 
 - (NSData*) moduleAsset;
 

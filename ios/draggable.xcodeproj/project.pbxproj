@@ -28,10 +28,8 @@
 		24DE9E1211C5FE74003F90F6 /* TiDraggableModuleAssets.m in Sources */ = {isa = PBXBuildFile; fileRef = 24DE9E1011C5FE74003F90F6 /* TiDraggableModuleAssets.m */; };
 		AA747D9F0F9514B9006C5449 /* TiDraggable_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = AA747D9E0F9514B9006C5449 /* TiDraggable_Prefix.pch */; };
 		AACBBE4A0F95108600F1A2B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACBBE490F95108600F1A2B1 /* Foundation.framework */; };
-		B628753114CBF59E00F6F923 /* TiDraggableView.h in Headers */ = {isa = PBXBuildFile; fileRef = B628752F14CBF59E00F6F923 /* TiDraggableView.h */; };
-		B628753214CBF59E00F6F923 /* TiDraggableView.m in Sources */ = {isa = PBXBuildFile; fileRef = B628753014CBF59E00F6F923 /* TiDraggableView.m */; };
-		B628753614CBF5B200F6F923 /* TiDraggableViewProxy.h in Headers */ = {isa = PBXBuildFile; fileRef = B628753414CBF5B200F6F923 /* TiDraggableViewProxy.h */; };
-		B628753714CBF5B200F6F923 /* TiDraggableViewProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = B628753514CBF5B200F6F923 /* TiDraggableViewProxy.m */; };
+		ED015513180E0AA400DC3394 /* TiDraggableGesture.m in Sources */ = {isa = PBXBuildFile; fileRef = ED015511180E0AA400DC3394 /* TiDraggableGesture.m */; };
+		ED015514180E0AA400DC3394 /* TiDraggableModule.m in Sources */ = {isa = PBXBuildFile; fileRef = ED015512180E0AA400DC3394 /* TiDraggableModule.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,12 +50,10 @@
 		24DE9E1011C5FE74003F90F6 /* TiDraggableModuleAssets.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TiDraggableModuleAssets.m; path = Classes/TiDraggableModuleAssets.m; sourceTree = "<group>"; };
 		AA747D9E0F9514B9006C5449 /* TiDraggable_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TiDraggable_Prefix.pch; sourceTree = SOURCE_ROOT; };
 		AACBBE490F95108600F1A2B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		B628752F14CBF59E00F6F923 /* TiDraggableView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TiDraggableView.h; path = Classes/TiDraggableView.h; sourceTree = "<group>"; };
-		B628753014CBF59E00F6F923 /* TiDraggableView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TiDraggableView.m; path = Classes/TiDraggableView.m; sourceTree = "<group>"; };
-		B628753414CBF5B200F6F923 /* TiDraggableViewProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TiDraggableViewProxy.h; path = Classes/TiDraggableViewProxy.h; sourceTree = "<group>"; };
-		B628753514CBF5B200F6F923 /* TiDraggableViewProxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TiDraggableViewProxy.m; path = Classes/TiDraggableViewProxy.m; sourceTree = "<group>"; };
 		B628753814CBF68500F6F923 /* app.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = app.js; path = example/app.js; sourceTree = "<group>"; };
 		D2AAC07E0554694100DB518D /* libTiDraggable.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTiDraggable.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		ED015511180E0AA400DC3394 /* TiDraggableGesture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TiDraggableGesture.m; path = Classes/TiDraggableGesture.m; sourceTree = "<group>"; };
+		ED015512180E0AA400DC3394 /* TiDraggableModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TiDraggableModule.m; path = Classes/TiDraggableModule.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -107,10 +103,8 @@
 				24DE9E1011C5FE74003F90F6 /* TiDraggableModuleAssets.m */,
 				24DD6CF71134B3F500162E58 /* TiDraggableModule.h */,
 				24DD6CF81134B3F500162E58 /* TiDraggableModule.m */,
-				B628752F14CBF59E00F6F923 /* TiDraggableView.h */,
-				B628753014CBF59E00F6F923 /* TiDraggableView.m */,
-				B628753414CBF5B200F6F923 /* TiDraggableViewProxy.h */,
-				B628753514CBF5B200F6F923 /* TiDraggableViewProxy.m */,
+				ED015511180E0AA400DC3394 /* TiDraggableGesture.m */,
+				ED015512180E0AA400DC3394 /* TiDraggableModule.m */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -134,8 +128,6 @@
 				AA747D9F0F9514B9006C5449 /* TiDraggable_Prefix.pch in Headers */,
 				24DD6CF91134B3F500162E58 /* TiDraggableModule.h in Headers */,
 				24DE9E1111C5FE74003F90F6 /* TiDraggableModuleAssets.h in Headers */,
-				B628753114CBF59E00F6F923 /* TiDraggableView.h in Headers */,
-				B628753614CBF5B200F6F923 /* TiDraggableViewProxy.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -209,10 +201,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ED015513180E0AA400DC3394 /* TiDraggableGesture.m in Sources */,
 				24DD6CFA1134B3F500162E58 /* TiDraggableModule.m in Sources */,
+				ED015514180E0AA400DC3394 /* TiDraggableModule.m in Sources */,
 				24DE9E1211C5FE74003F90F6 /* TiDraggableModuleAssets.m in Sources */,
-				B628753214CBF59E00F6F923 /* TiDraggableView.m in Sources */,
-				B628753714CBF5B200F6F923 /* TiDraggableViewProxy.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

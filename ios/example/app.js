@@ -1,6 +1,5 @@
 /*global require,console,Ti*/
 /*jslint devel: true, forin: true */
-
 /**
  * An enhanced fork of the original TiDraggable module by Pedro Enrique,
  * allows for simple creation of "draggable" views.
@@ -43,7 +42,8 @@
     var Draggable = require('ti.draggable'),
         mainWindow = Ti.UI.createWindow({
             backgroundColor : 'white',
-            exitOnClose : true
+            exitOnClose : true,
+            fullscreen : true
         }),
         subscribe = function (proxy, observer) {
             var key, events, eIndex;
@@ -62,13 +62,15 @@
             var view = Draggable.createView({
                     width : 100,
                     height : 100,
-                    axis : axis,
                     borderRadius : 3,
-                    minLeft : 0,
-                    maxLeft : Ti.Platform.displayCaps.platformWidth - 100,
-                    minTop : 0,
-                    maxTop : Ti.Platform.displayCaps.platformHeight - 120,
-                    backgroundColor : color || 'black'
+                    backgroundColor : color || 'black',
+                    draggable : {
+                        axis : axis,
+                        minLeft : 0,
+                        maxLeft : Ti.Platform.displayCaps.platformWidth - 100,
+                        minTop : 0,
+                        maxTop : Ti.Platform.displayCaps.platformHeight - 100,
+                    }
                 });
 
             view.add(Ti.UI.createLabel({

@@ -34,28 +34,36 @@
  * limitations under the License.
  */
 
-#import "TiDraggableViewProxy.h"
-#import "TiDraggableView.h"
-#import "TiPoint.h"
+#import <UIKit/UIKit.h>
+#import "TiUtils.h"
+#import "TiUIView.h"
+#import "TiViewProxy.h"
 
-@implementation TiDraggableViewProxy
-
--(id)left
+@interface TiDraggableGesture : NSObject<UIGestureRecognizerDelegate, TiProxyObserver>
 {
-    TiDraggableView *v = (TiDraggableView *)[self view];
-    return [NSNumber numberWithFloat:v.frame.origin.x];
+    BOOL proxyDidLayout;
+    BOOL proxyDidChangeOrient;
+    NSString* axis;
+    
+    float maxLeft;
+    float minLeft;
+    float maxTop;
+    float minTop;
+    
+    BOOL hasMaxLeft;
+    BOOL hasMinLeft;
+    BOOL hasMaxTop;
+    BOOL hasMinTop;
+    BOOL ensureRight;
+    BOOL ensureBottom;
 }
 
--(id)center
-{
-    TiDraggableView *v = (TiDraggableView *)[self view];
-    return [[[TiPoint alloc] initWithPoint:v.center] autorelease];
-}
+-(id)initWithView:(UIView*)view andOptions:(NSDictionary*)options;
 
--(id)top
-{
-    TiDraggableView *v = (TiDraggableView *)[self view];
-    return [NSNumber numberWithFloat:v.frame.origin.y];
-}
+@property (nonatomic, assign) TiUIView* view;
+@property (nonatomic, assign) NSDictionary* properties;
+@property (nonatomic, assign) NSArray* mappedPoxies;
+
+typedef void (^CallbackBlock)(void);
 
 @end
