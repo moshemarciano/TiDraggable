@@ -53,13 +53,18 @@
         
         ENSURE_ARG_AT_INDEX(key, args, 0, NSString);
         
-        NSMutableDictionary* params = [[[self valueForKey:@"draggable"] mutableCopy] autorelease];
+        NSMutableDictionary* params = [[self valueForKey:@"draggable"] mutableCopy];
         
-        if (params)
+        if (! params)
         {
-            [params setValue:value forKeyPath:key];
-            [self replaceValue:[[params copy] autorelease] forKey:@"draggable" notification:YES];
+            params = [[NSMutableDictionary alloc] init];
         }
+        
+        [params setValue:value forKeyPath:key];
+        
+        [self replaceValue:[[params copy] autorelease] forKey:@"draggable" notification:YES];
+        
+        [params release];
     }
 }
 
