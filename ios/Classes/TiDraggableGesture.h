@@ -39,7 +39,7 @@
 #import "TiUIView.h"
 #import "TiViewProxy.h"
 
-@interface TiDraggableGesture : NSObject<UIGestureRecognizerDelegate, TiProxyObserver>
+@interface TiDraggableGesture : NSObject<UIGestureRecognizerDelegate, TiProxyObserver, TiProxyDelegate>
 {
     BOOL proxyDidLayout;
     BOOL proxyDidChangeOrient;
@@ -61,8 +61,9 @@
 -(id)initWithView:(UIView*)view andOptions:(NSDictionary*)options;
 
 @property (nonatomic, assign) TiUIView* view;
-@property (nonatomic, assign) NSDictionary* properties;
-@property (nonatomic, assign) NSArray* mappedPoxies;
+@property (nonatomic, assign) id<TiProxyDelegate> modelDelegate;
+@property (nonatomic, retain) NSDictionary* properties;
+@property (nonatomic, retain) NSArray* mappedPoxies;
 
 typedef void (^CallbackBlock)(void);
 

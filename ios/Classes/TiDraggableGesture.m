@@ -36,6 +36,35 @@
 
 #import "TiDraggableGesture.h"
 
+@implementation TiViewProxy (DraggableProxy)
+
+- (void)setDraggable:(id)args
+{
+    if ([args isKindOfClass:[NSDictionary class]])
+    {
+        [self replaceValue:args forKey:@"draggable" notification:NO];
+    }
+    else if ([args isKindOfClass:[NSArray class]])
+    {
+        ENSURE_ARG_COUNT(args, 2);
+        
+        NSString* key;
+        id value = [args objectAtIndex:1];
+        
+        ENSURE_ARG_AT_INDEX(key, args, 0, NSString);
+        
+        NSMutableDictionary* params = [[[self valueForKey:@"draggable"] mutableCopy] autorelease];
+        
+        if (params)
+        {
+            [params setValue:value forKeyPath:key];
+            [self replaceValue:[[params copy] autorelease] forKey:@"draggable" notification:YES];
+        }
+    }
+}
+
+@end
+
 @implementation TiDraggableGesture
 
 - (id)initWithView:(TiUIView*)view andOptions:(NSDictionary *)options
@@ -43,7 +72,7 @@
     if (self = [super init])
     {
         self.view = view;
-        self.properties = [options retain];
+        self.properties = options;
         
         axis = [self.properties objectForKey:@"axis"];
         maxLeft = [[self.properties objectForKey:@"maxLeft"] floatValue];
@@ -65,7 +94,13 @@
 
 - (void)setListeners
 {
-    [(TiViewProxy*)[self.view proxy] setProxyObserver:self];
+    TiViewProxy* proxy = (TiViewProxy*)[self.view proxy];
+    
+    self.modelDelegate = [proxy modelDelegate];
+    
+    [proxy setModelDelegate:self];
+    [proxy setProxyObserver:self];
+    
     [self.view addGestureRecognizer:[[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panDetected:)] autorelease]];
 }
 
@@ -77,7 +112,7 @@
     CGPoint imageViewPosition = self.view.center;
     CGSize size = self.view.frame.size;
     
-    [self mapProxyOriginToCollection:self.mappedPoxies
+    [self mapProxyOriginToCollection:[self.properties objectForKey:@"maps"]
                     withTranslationX:translation.x
                      andTranslationY:translation.y];
     
@@ -164,65 +199,66 @@
 
 - (void)prepareMappedProxies
 {
-    RELEASE_TO_NIL_AUTORELEASE(self.mappedPoxies);
+    NSArray* maps = [self.properties objectForKey:@"maps"];
     
-    self.mappedPoxies = [self.properties objectForKey:@"maps"];
-    
-    [self.mappedPoxies enumerateObjectsUsingBlock:^(id map, NSUInteger index, BOOL *stop) {
-        TiViewProxy* proxy = [map objectForKey:@"view"];
-        NSDictionary* constraints = [map objectForKey:@"constrain"];
-        NSDictionary* constraintX = [constraints objectForKey:@"x"];
-        NSDictionary* constraintY = [constraints objectForKey:@"y"];
-        BOOL fromCenterX = [TiUtils boolValue:[constraintX objectForKey:@"fromCenter"] def:NO];
-        BOOL fromCenterY = [TiUtils boolValue:[constraintY objectForKey:@"fromCenter"] def:NO];
-        
-        float multiplier = [[map objectForKey:@"multiplier"] floatValue];
-        CGSize proxySize = [proxy view].frame.size;
-        CGPoint proxyCenter = [proxy view].center;
-        
-        if (constraintX)
-        {
-            NSNumber* startX = [constraintX objectForKey:@"start"];
+    if ([maps isKindOfClass:[NSArray class]])
+    {
+        [maps enumerateObjectsUsingBlock:^(id map, NSUInteger index, BOOL *stop) {
+            TiViewProxy* proxy = [map objectForKey:@"view"];
+            NSDictionary* constraints = [map objectForKey:@"constrain"];
+            NSDictionary* constraintX = [constraints objectForKey:@"x"];
+            NSDictionary* constraintY = [constraints objectForKey:@"y"];
+            BOOL fromCenterX = [TiUtils boolValue:[constraintX objectForKey:@"fromCenter"] def:NO];
+            BOOL fromCenterY = [TiUtils boolValue:[constraintY objectForKey:@"fromCenter"] def:NO];
             
-            if (startX)
+            float multiplier = [[map objectForKey:@"multiplier"] floatValue];
+            CGSize proxySize = [proxy view].frame.size;
+            CGPoint proxyCenter = [proxy view].center;
+            
+            if (constraintX)
             {
-                if (fromCenterX)
+                NSNumber* startX = [constraintX objectForKey:@"start"];
+                
+                if (startX)
                 {
-                    proxyCenter.x = [startX floatValue] + [proxy.parent view].frame.size.width / 2;
-                }
-                else
-                {
-                    proxyCenter.x = ([startX floatValue] / multiplier) + (proxySize.width / 2);
+                    if (fromCenterX)
+                    {
+                        proxyCenter.x = [startX floatValue] + [proxy.parent view].frame.size.width / 2;
+                    }
+                    else
+                    {
+                        proxyCenter.x = ([startX floatValue] / multiplier) + (proxySize.width / 2);
+                    }
                 }
             }
-        }
-        
-        if (constraintY)
-        {
-            NSNumber* startY = [constraintY objectForKey:@"start"];
             
-            if (startY)
+            if (constraintY)
             {
-                if (fromCenterY)
+                NSNumber* startY = [constraintY objectForKey:@"start"];
+                
+                if (startY)
                 {
-                    proxyCenter.y = [startY floatValue] + [proxy.parent view].frame.size.height / 2;
-                }
-                else
-                {
-                    proxyCenter.y = ([startY floatValue] / multiplier) + (proxySize.height / 2);
+                    if (fromCenterY)
+                    {
+                        proxyCenter.y = [startY floatValue] + [proxy.parent view].frame.size.height / 2;
+                    }
+                    else
+                    {
+                        proxyCenter.y = ([startY floatValue] / multiplier) + (proxySize.height / 2);
+                    }
                 }
             }
-        }
-        
-        [proxy view].center = proxyCenter;
-        [proxy setLeft:[NSNumber numberWithFloat:[proxy view].frame.origin.x]];
-        [proxy setTop:[NSNumber numberWithFloat:[proxy view].frame.origin.y]];
-    }];
+            
+            [proxy view].center = proxyCenter;
+            [proxy setLeft:[NSNumber numberWithFloat:[proxy view].frame.origin.x]];
+            [proxy setTop:[NSNumber numberWithFloat:[proxy view].frame.origin.y]];
+        }];
+    }
 }
 
 - (void)mapProxyOriginToCollection:(NSArray*)proxies withTranslationX:(float)translationX andTranslationY:(float)translationY
 {
-    if (! [proxies isKindOfClass:[NSNull class]])
+    if ([proxies isKindOfClass:[NSArray class]])
     {
         [proxies enumerateObjectsUsingBlock:^(id map, NSUInteger index, BOOL *stop) {
             TiViewProxy* proxy = [map objectForKey:@"view"];
@@ -316,6 +352,33 @@
     }
 }
 
+- (void)propertyChanged:(NSString *)key oldValue:(id)oldValue newValue:(id)newValue proxy:(TiProxy *)proxy
+{
+    if ([key isEqualToString:@"draggable"])
+    {
+        self.properties = newValue;
+        
+        axis = [self.properties objectForKey:@"axis"];
+        maxLeft = [[self.properties objectForKey:@"maxLeft"] floatValue];
+        minLeft = [[self.properties objectForKey:@"minLeft"] floatValue];
+        maxTop = [[self.properties objectForKey:@"maxTop"] floatValue];
+        minTop = [[self.properties objectForKey:@"minTop"] floatValue];
+        hasMaxLeft = [self.properties objectForKey:@"maxLeft"] != nil;
+        hasMinLeft = [self.properties objectForKey:@"minLeft"] != nil;
+        hasMaxTop = [self.properties objectForKey:@"maxTop"] != nil;
+        hasMinTop = [self.properties objectForKey:@"minTop"] != nil;
+        ensureRight = [TiUtils boolValue:[self.properties objectForKey:@"ensureRight"] def:NO];
+        ensureBottom = [TiUtils boolValue:[self.properties objectForKey:@"ensureBottom"] def:NO];
+        
+        [self prepareMappedProxies];
+    }
+    
+    if (self.modelDelegate)
+    {
+        [self.modelDelegate propertyChanged:key oldValue:oldValue newValue:newValue proxy:proxy];
+    }
+}
+
 - (void)proxyDidRelayout:(id)sender
 {
     if (! proxyDidLayout)
@@ -330,7 +393,6 @@
 {
     RELEASE_TO_NIL_AUTORELEASE(self.view);
     RELEASE_TO_NIL_AUTORELEASE(self.properties);
-    RELEASE_TO_NIL_AUTORELEASE(self.mappedPoxies);
     RELEASE_TO_NIL(axis);
     
     [super dealloc];
