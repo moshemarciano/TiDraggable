@@ -121,6 +121,43 @@
     [super dealloc];
 }
 
+- (void)propertyChanged:(NSString *)key oldValue:(id)oldValue newValue:(id)newValue proxy:(TiProxy *)proxy
+{
+    if ([key isEqualToString:@"draggable"])
+    {
+        self.properties = newValue;
+        
+        axis = [self.properties objectForKey:@"axis"];
+        maxLeft = [[self.properties objectForKey:@"maxLeft"] floatValue];
+        minLeft = [[self.properties objectForKey:@"minLeft"] floatValue];
+        maxTop = [[self.properties objectForKey:@"maxTop"] floatValue];
+        minTop = [[self.properties objectForKey:@"minTop"] floatValue];
+        hasMaxLeft = [self.properties objectForKey:@"maxLeft"] != nil;
+        hasMinLeft = [self.properties objectForKey:@"minLeft"] != nil;
+        hasMaxTop = [self.properties objectForKey:@"maxTop"] != nil;
+        hasMinTop = [self.properties objectForKey:@"minTop"] != nil;
+        ensureRight = [TiUtils boolValue:[self.properties objectForKey:@"ensureRight"] def:NO];
+        ensureBottom = [TiUtils boolValue:[self.properties objectForKey:@"ensureBottom"] def:NO];
+        
+        [self prepareMappedProxies];
+    }
+    
+    if (self.modelDelegate)
+    {
+        [self.modelDelegate propertyChanged:key oldValue:oldValue newValue:newValue proxy:proxy];
+    }
+}
+
+- (void)proxyDidRelayout:(id)sender
+{
+    if (! proxyDidLayout)
+    {
+        [self prepareMappedProxies];
+    }
+    
+    proxyDidLayout = YES;
+}
+
 - (void)panDetected:(UIPanGestureRecognizer *)panRecognizer
 {
     ENSURE_UI_THREAD_1_ARG(panRecognizer);
@@ -408,43 +445,6 @@
                                              notification:YES];
         }];
     }
-}
-
-- (void)propertyChanged:(NSString *)key oldValue:(id)oldValue newValue:(id)newValue proxy:(TiProxy *)proxy
-{
-    if ([key isEqualToString:@"draggable"])
-    {
-        self.properties = newValue;
-        
-        axis = [self.properties objectForKey:@"axis"];
-        maxLeft = [[self.properties objectForKey:@"maxLeft"] floatValue];
-        minLeft = [[self.properties objectForKey:@"minLeft"] floatValue];
-        maxTop = [[self.properties objectForKey:@"maxTop"] floatValue];
-        minTop = [[self.properties objectForKey:@"minTop"] floatValue];
-        hasMaxLeft = [self.properties objectForKey:@"maxLeft"] != nil;
-        hasMinLeft = [self.properties objectForKey:@"minLeft"] != nil;
-        hasMaxTop = [self.properties objectForKey:@"maxTop"] != nil;
-        hasMinTop = [self.properties objectForKey:@"minTop"] != nil;
-        ensureRight = [TiUtils boolValue:[self.properties objectForKey:@"ensureRight"] def:NO];
-        ensureBottom = [TiUtils boolValue:[self.properties objectForKey:@"ensureBottom"] def:NO];
-        
-        [self prepareMappedProxies];
-    }
-    
-    if (self.modelDelegate)
-    {
-        [self.modelDelegate propertyChanged:key oldValue:oldValue newValue:newValue proxy:proxy];
-    }
-}
-
-- (void)proxyDidRelayout:(id)sender
-{
-    if (! proxyDidLayout)
-    {
-        [self prepareMappedProxies];
-    }
-    
-    proxyDidLayout = YES;
 }
 
 @end
