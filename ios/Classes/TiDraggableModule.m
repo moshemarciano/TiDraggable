@@ -57,13 +57,13 @@
 - (void)makeDraggable:(id)args
 {
     ENSURE_UI_THREAD_1_ARG(args);
-    
+
     TiViewProxy* proxy = nil;
     NSDictionary* options = nil;
-    
+
     ENSURE_ARG_AT_INDEX(proxy, args, 0, TiViewProxy);
     ENSURE_ARG_OR_NIL_AT_INDEX(options, args, 1, NSDictionary);
-    
+
     if (proxy)
     {
         [[TiDraggableGesture alloc] initWithView:(TiUIView*)proxy.view andOptions:options];
@@ -73,7 +73,7 @@
 - (id)createProxy:(NSArray*)args forName:(NSString*)name context:(id<TiEvaluator>)context
 {
     TiViewProxy* proxy = nil;
-    
+
     if ([name isEqualToString:@"createNavigationWindow"])
     {
         proxy = [[[TiUIiOSNavWindowProxy alloc] _initWithPageContext:[self executionContext] args:args] autorelease];
@@ -83,62 +83,41 @@
         Ivar nameLookupIvar = class_getInstanceVariable([super class], "classNameLookup");
         CFMutableDictionaryRef cnLookup = (CFMutableDictionaryRef)object_getIvar(self, nameLookupIvar);
         Class resultClass = (Class) CFDictionaryGetValue(cnLookup, name);
-        
+
         if (resultClass == NULL)
         {
             NSRange range = [name rangeOfString:@"create"];
-            
+
             if (range.location == NSNotFound)
             {
                 return nil;
             }
-            
+
             NSString *className = [NSString stringWithFormat:@"Ti%@Proxy", [name substringFromIndex:range.location + 6]];
-            
+
             resultClass = NSClassFromString(className);
-            
+
             if (! [resultClass isSubclassOfClass:[TiViewProxy class]])
             {
                 @throw [NSException exceptionWithName:@"ti.draggable"
                                                reason:[NSString stringWithFormat:@"invalid method (%@) passed to %@", name, [self class]]
                                              userInfo:nil];
             }
-            
+
             CFDictionarySetValue(cnLookup, name, resultClass);
         }
-        
+
         proxy = [[[resultClass alloc] _initWithPageContext:context args:args] autorelease];
     }
-    
+
     if (proxy)
     {
         NSDictionary* options = [proxy valueForKeyPath:@"draggable"];
-        
+
         [[TiDraggableGesture alloc] initWithView:[proxy view] andOptions:options];
     }
-    
-    return proxy;
-}
 
-- (id) performSelector: (SEL) selector withObject: (id) p1 withObject: (id) p2 withObject: (id) p3
-{
-    NSMethodSignature *sig = [self methodSignatureForSelector:selector];
-    if (!sig)
-        return nil;
-    
-    NSInvocation* invo = [NSInvocation invocationWithMethodSignature:sig];
-    [invo setTarget:self];
-    [invo setSelector:selector];
-    [invo setArgument:&p1 atIndex:2];
-    [invo setArgument:&p2 atIndex:3];
-    [invo setArgument:&p3 atIndex:4];
-    [invo invoke];
-    if (sig.methodReturnLength) {
-        id anObject;
-        [invo getReturnValue:&anObject];
-        return anObject;
-    }
-    return nil;
+    return proxy;
 }
 
 @end
