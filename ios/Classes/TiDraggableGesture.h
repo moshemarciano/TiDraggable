@@ -56,6 +56,8 @@
     BOOL hasMinTop;
     BOOL ensureRight;
     BOOL ensureBottom;
+    
+    CGRect lastAnimationFrame;
 }
 
 -(id)initWithView:(UIView*)view andOptions:(NSDictionary*)options;

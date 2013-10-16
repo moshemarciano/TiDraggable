@@ -447,4 +447,40 @@
     }
 }
 
+- (void)tandemAnimation
+{
+    NSTimer* animationInterval = [NSTimer scheduledTimerWithTimeInterval:0.01
+                                                                  target:self
+                                                                selector:@selector(animationTrigger)
+                                                                userInfo:nil
+                                                                 repeats:YES];
+    
+    [UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationCurveEaseInOut animations:^{
+        [_view setCenter:CGPointZero];
+    } completion:^(BOOL finished) {
+        [animationInterval invalidate];
+        lastAnimationFrame = CGRectZero;
+    }];
+}
+
+- (void)animationTrigger
+{
+    CGRect currentFrame = [[self.view.layer presentationLayer] frame];
+    
+    float translationX = 0;
+    float translationY = 0;
+    
+    if (! CGRectEqualToRect(lastAnimationFrame, CGRectZero))
+    {
+        translationX = currentFrame.origin.x - lastAnimationFrame.origin.x;
+        translationY = currentFrame.origin.y - lastAnimationFrame.origin.y;
+    }
+    
+    [self mapProxyOriginToCollection:[self.properties objectForKey:@"maps"]
+                    withTranslationX:translationX
+                     andTranslationY:translationY];
+    
+    lastAnimationFrame = currentFrame;
+}
+
 @end
