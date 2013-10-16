@@ -60,7 +60,7 @@
 
 -(id)initWithView:(UIView*)view andOptions:(NSDictionary*)options;
 
-@property (nonatomic, assign) TiUIView* view;
+@property (nonatomic, retain) TiUIView* view;
 @property (nonatomic, assign) id<TiProxyDelegate> modelDelegate;
 @property (nonatomic, retain) NSDictionary* properties;
 @property (nonatomic, retain) NSArray* mappedPoxies;
