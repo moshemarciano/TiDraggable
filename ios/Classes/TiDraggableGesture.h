@@ -39,33 +39,15 @@
 #import "TiUIView.h"
 #import "TiViewProxy.h"
 
-@interface TiDraggableGesture : NSObject<UIGestureRecognizerDelegate, TiProxyObserver, TiProxyDelegate>
+@interface TiDraggableGesture : TiProxy<UIGestureRecognizerDelegate, TiProxyObserver, TiProxyDelegate>
 {
     BOOL proxyDidLayout;
-    BOOL proxyDidChangeOrient;
-    NSString* axis;
-    
-    float maxLeft;
-    float minLeft;
-    float maxTop;
-    float minTop;
-    
-    BOOL hasMaxLeft;
-    BOOL hasMinLeft;
-    BOOL hasMaxTop;
-    BOOL hasMinTop;
-    BOOL ensureRight;
-    BOOL ensureBottom;
-    
     CGRect lastAnimationFrame;
 }
 
 -(id)initWithView:(UIView*)view andOptions:(NSDictionary*)options;
 
 @property (nonatomic, retain) TiUIView* view;
-@property (nonatomic, assign) id<TiProxyDelegate> modelDelegate;
-@property (nonatomic, retain) NSDictionary* properties;
-@property (nonatomic, retain) NSArray* mappedPoxies;
 
 typedef void (^CallbackBlock)(void);
 

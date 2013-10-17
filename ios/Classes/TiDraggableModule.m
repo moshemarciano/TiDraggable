@@ -112,7 +112,7 @@
 
     if (proxy)
     {
-        NSDictionary* options = [proxy valueForKeyPath:@"draggable"];
+        NSDictionary* options = [proxy valueForKeyPath:@"draggableConfig"];
 
         [[TiDraggableGesture alloc] initWithView:[proxy view] andOptions:options];
     }
