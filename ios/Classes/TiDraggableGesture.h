@@ -39,10 +39,12 @@
 #import "TiUIView.h"
 #import "TiViewProxy.h"
 
-@interface TiDraggableGesture : TiProxy<UIGestureRecognizerDelegate, TiProxyObserver, TiProxyDelegate>
+@interface TiDraggableGesture : TiProxy<UIGestureRecognizerDelegate, TiAnimationDelegate>
 {
-    BOOL proxyDidLayout;
+    CGPoint touchStart;
+    CGPoint touchEnd;
     CGRect lastAnimationFrame;
+    NSTimer* animationTimer;
 }
 
 -(id)initWithView:(UIView*)view andOptions:(NSDictionary*)options;
