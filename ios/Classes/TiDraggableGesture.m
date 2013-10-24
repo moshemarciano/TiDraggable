@@ -54,7 +54,7 @@
         [self.view addGestureRecognizer:[[[UIPanGestureRecognizer alloc]
                                           initWithTarget:self
                                           action:@selector(panDetected:)] autorelease]];
-        
+
         [self correctMappedProxyPositions];
     }
 
@@ -63,7 +63,6 @@
 
 - (void)dealloc
 {
-    RELEASE_TO_NIL_AUTORELEASE(animationTimer);
     RELEASE_TO_NIL_AUTORELEASE(self.view);
 
     [super dealloc];
@@ -72,38 +71,36 @@
 - (void)setConfig:(id)args
 {
     BOOL didUpdateConfig = NO;
-    
+
     if ([args isKindOfClass:[NSDictionary class]])
     {
-        NSLog(@"Dictionary");
         [self setValuesForKeysWithDictionary:args];
-        
+
         didUpdateConfig = YES;
     }
     else if ([args isKindOfClass:[NSArray class]] && [args count] >= 2)
     {
-        NSLog(@"Individual");
         NSString* key;
         id value = [args objectAtIndex:1];
-        
+
         ENSURE_ARG_AT_INDEX(key, args, 0, NSString);
-        
+
         NSMutableDictionary* params = [[self valueForKey:@"config"] mutableCopy];
-        
+
         if (! params)
         {
             params = [[NSMutableDictionary alloc] init];
         }
-        
+
         [params setValue:value forKeyPath:key];
-        
+
         [self setValuesForKeysWithDictionary:[[params copy] autorelease]];
-        
+
         [params release];
-        
+
         didUpdateConfig = YES;
     }
-    
+
     if (didUpdateConfig)
     {
         [self correctMappedProxyPositions];
@@ -113,51 +110,82 @@
 - (void)animate:(id)args
 {
     ENSURE_UI_THREAD_1_ARG(args);
-    
+
     NSDictionary* properties;
     KrollCallback* callback;
-    
+
     ENSURE_ARG_AT_INDEX(properties, args, 0, NSDictionary);
     ENSURE_ARG_OR_NIL_AT_INDEX(callback, args, 1, KrollCallback);
-    
-    animationTimer = [NSTimer scheduledTimerWithTimeInterval:0.0001
-                                                      target:self
-                                                    selector:@selector(animationTrigger)
-                                                    userInfo:nil
-                                                     repeats:YES];
-    
-    TiAnimation* animation = [[TiAnimation alloc] initWithDictionary:properties context:[self pageContext] callback:callback];
-    
+
+    TiViewProxy* proxy = (TiViewProxy*)self.view.proxy;
+    TiAnimation* animation = [[[TiAnimation alloc] initWithDictionary:properties
+                                                             context:[self executionContext]
+                                                            callback:callback] autorelease];
+
     [animation setDelegate:self];
-    
-    [(TiViewProxy*)self.view.proxy animate:[animation autorelease]];
+    [proxy animate:animation];
 }
 
-- (void)animationWillComplete:(TiAnimation *)animation
+- (void)startMonitor
 {
-    [animationTimer invalidate];
-    
-    lastAnimationFrame = CGRectZero;
+    if (monitorTimer == nil)
+    {
+        monitorTimer = [NSTimer scheduledTimerWithTimeInterval:0.00001
+                                                        target:self
+                                                      selector:@selector(positionMonitor)
+                                                      userInfo:nil
+                                                       repeats:YES];
+    }
 }
 
-- (void)animationTrigger
+- (void)stopMonitor:(id)shouldResetPosition
 {
-    CGRect currentFrame = [[self.view.layer presentationLayer] frame];
-    
+    if (monitorTimer != nil && [monitorTimer isValid])
+    {
+        [monitorTimer invalidate];
+
+        monitorTimer = nil;
+    }
+
+    if ([shouldResetPosition isKindOfClass:[NSNumber class]])
+    {
+        if ([shouldResetPosition boolValue])
+        {
+            lastAnimationPosition = CGPointZero;
+        }
+    }
+}
+
+- (void)positionMonitor
+{
+    CGPoint currentPosition = [[self.view.layer presentationLayer] position];
+
     float translationX = 0;
     float translationY = 0;
-    
-    if (! CGRectEqualToRect(lastAnimationFrame, CGRectZero))
+
+    if (! CGPointEqualToPoint(lastAnimationPosition, CGPointZero))
     {
-        translationX = currentFrame.origin.x - lastAnimationFrame.origin.x;
-        translationY = currentFrame.origin.y - lastAnimationFrame.origin.y;
+        translationX = currentPosition.x - lastAnimationPosition.x;
+        translationY = currentPosition.y - lastAnimationPosition.y;
     }
-    
+
     [self mapProxyOriginToCollection:[self valueForKey:@"maps"]
                     withTranslationX:translationX
                      andTranslationY:translationY];
-    
-    lastAnimationFrame = currentFrame;
+
+    lastAnimationPosition = currentPosition;
+}
+
+- (void)animationWillStart:(TiAnimation *)animation
+{
+    [self startMonitor];
+}
+
+- (void)animationDidComplete:(TiAnimation *)animation
+{
+    [self stopMonitor:nil];
+
+    lastAnimationPosition = CGPointZero;
 }
 
 - (void)panDetected:(UIPanGestureRecognizer *)panRecognizer
@@ -167,10 +195,10 @@
     CGPoint translation = [panRecognizer translationInView:self.view];
     CGPoint newCenter = self.view.center;
     CGSize size = self.view.frame.size;
-    
+
     float tmpTranslationX;
     float tmpTranslationY;
-    
+
     if ([panRecognizer state] == UIGestureRecognizerStateBegan)
     {
         touchStart = self.view.frame.origin;
@@ -183,14 +211,14 @@
     if([[self valueForKey:@"axis"] isEqualToString:@"x"])
     {
         tmpTranslationX = translation.x;
-        
+
         newCenter.x += translation.x;
         newCenter.y = newCenter.y;
     }
     else if([[self valueForKey:@"axis"] isEqualToString:@"y"])
     {
         tmpTranslationY = translation.y;
-        
+
         newCenter.x = newCenter.x;
         newCenter.y += translation.y;
     }
@@ -198,7 +226,7 @@
     {
         tmpTranslationX = translation.x;
         tmpTranslationY = translation.y;
-        
+
         newCenter.x += translation.x;
         newCenter.y += translation.y;
     }
@@ -237,45 +265,45 @@
     }
 
     self.view.center = newCenter;
-    
+
     [panRecognizer setTranslation:CGPointZero inView:self.view];
-    
+
     [self mapProxyOriginToCollection:[self valueForKey:@"maps"]
                     withTranslationX:tmpTranslationX
                      andTranslationY:tmpTranslationY];
 
     TiViewProxy* panningProxy = (TiViewProxy*)[self.view proxy];
-    
+
     float left = [panningProxy view].frame.origin.x;
     float top = [panningProxy view].frame.origin.y;
-    
+
     if ([self valueForKey:@"axis"] == nil || [[self valueForKey:@"axis"] isEqualToString:@"x"])
     {
         [panningProxy setLeft:[NSNumber numberWithFloat:left]];
-        
+
         if (ensureRight)
         {
             [panningProxy setRight:[NSNumber numberWithFloat:left * -1]];
         }
     }
-    
+
     if ([self valueForKey:@"axis"] == nil || [[self valueForKey:@"axis"] isEqualToString:@"y"])
     {
         [panningProxy setTop:[NSNumber numberWithFloat:top]];
-        
+
         if (ensureBottom)
         {
             [panningProxy setBottom:[NSNumber numberWithFloat:top * -1]];
         }
     }
-    
+
     NSMutableDictionary *tiProps = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                              [NSNumber numberWithFloat:left], @"left",
                              [NSNumber numberWithFloat:top], @"top",
                              [TiUtils pointToDictionary:self.view.center], @"center",
                              [TiUtils pointToDictionary:[panRecognizer velocityInView:self.view]], @"velocity",
                              nil];
-    
+
     if([panningProxy _hasListeners:@"start"] && [panRecognizer state] == UIGestureRecognizerStateBegan)
     {
         [panningProxy fireEvent:@"start" withObject:tiProps];
@@ -290,7 +318,7 @@
                            [NSNumber numberWithFloat:touchEnd.x - touchStart.x], @"x",
                            [NSNumber numberWithFloat:touchEnd.y - touchStart.y], @"y",
                            nil] forKey:@"distance"];
-        
+
         [panningProxy fireEvent:([panRecognizer state] == UIGestureRecognizerStateCancelled ? @"cancel" : @"end")
               withObject:tiProps];
     }
@@ -299,7 +327,7 @@
 - (void)correctMappedProxyPositions
 {
     NSArray* maps = [self valueForKey:@"maps"];
-    
+
     if ([maps isKindOfClass:[NSArray class]])
     {
         [maps enumerateObjectsUsingBlock:^(id map, NSUInteger index, BOOL *stop) {
@@ -312,18 +340,18 @@
 
             CGSize proxySize = [proxy view].frame.size;
             CGPoint proxyCenter = [proxy view].center;
-            
-            NSNumber* multiplier = [TiUtils numberFromObject:[map objectForKey:@"multiplier"]];
 
-            if (! multiplier)
+            NSNumber* parallaxAmount = [TiUtils numberFromObject:[map objectForKey:@"parallaxAmount"]];
+
+            if (! parallaxAmount)
             {
-                multiplier = [NSNumber numberWithInteger:1];
+                parallaxAmount = [NSNumber numberWithInteger:1];
             }
 
             if (constraintX)
             {
                 NSNumber* startX = [constraintX objectForKey:@"start"];
-                
+
                 if (fromCenterX)
                 {
                     proxyCenter.x = [startX floatValue];
@@ -331,14 +359,15 @@
                 }
                 else
                 {
-                    proxyCenter.x = ([startX floatValue] / [multiplier floatValue]) + (proxySize.width / 2);
+                    proxyCenter.x = [startX floatValue] / [parallaxAmount floatValue];
+                    proxyCenter.x += proxySize.width / 2;
                 }
             }
 
             if (constraintY)
             {
                 NSNumber* startY = [constraintY objectForKey:@"start"];
-                
+
                 if (fromCenterY)
                 {
                     proxyCenter.y = [startY floatValue];
@@ -346,11 +375,10 @@
                 }
                 else
                 {
-                    proxyCenter.y = ([startY floatValue] / [multiplier floatValue]) + (proxySize.height / 2);
+                    proxyCenter.y = [startY floatValue] / [parallaxAmount floatValue];
+                    proxyCenter.y += proxySize.height / 2;
                 }
             }
-            
-            NSLog(@"%@", NSStringFromCGPoint(proxyCenter));
 
             if (constraintX || constraintY)
             {
@@ -361,7 +389,7 @@
             {
                 [proxy setLeft:[NSNumber numberWithFloat:[proxy view].frame.origin.x]];
             }
-            
+
             if (constraintY)
             {
                 [proxy setTop:[NSNumber numberWithFloat:[proxy view].frame.origin.y]];
@@ -380,21 +408,21 @@
             CGPoint proxyCenter = [proxy view].center;
             CGSize proxySize = [proxy view].frame.size;
             CGSize parentSize = [[proxy.parent view] frame].size;
-            
-            NSNumber* multiplier = [TiUtils numberFromObject:[map objectForKey:@"multiplier"]];
-            
-            if (! multiplier)
+
+            NSNumber* parallaxAmount = [TiUtils numberFromObject:[map objectForKey:@"parallaxAmount"]];
+
+            if (! parallaxAmount)
             {
-                multiplier = [NSNumber numberWithInteger:1];
+                parallaxAmount = [NSNumber numberWithInteger:1];
             }
-            
+
             NSDictionary* constraints = [map objectForKey:@"constrain"];
             NSDictionary* constraintX = [constraints objectForKey:@"x"];
             NSDictionary* constraintY = [constraints objectForKey:@"y"];
             NSString* constraintAxis = [constraints objectForKey:@"axis"];
-            
+
             TiProxy* proxyDraggable = [proxy valueForKey:@"draggable"];
-            
+
             NSInteger maxLeft = [[proxyDraggable valueForKey:@"maxLeft"] floatValue];
             NSInteger minLeft = [[proxyDraggable valueForKey:@"minLeft"] floatValue];
             NSInteger maxTop = [[proxyDraggable valueForKey:@"maxTop"] floatValue];
@@ -405,7 +433,7 @@
             BOOL hasMinTop = [proxyDraggable valueForKey:@"minTop"] != nil;
             BOOL ensureRight = [TiUtils boolValue:[proxyDraggable valueForKey:@"ensureRight"] def:NO];
             BOOL ensureBottom = [TiUtils boolValue:[proxyDraggable valueForKey:@"ensureBottom"] def:NO];
-            
+
             if (constraints)
             {
                 if (constraintX && ([constraintAxis isEqualToString:@"x"] || constraintAxis == nil))
@@ -414,21 +442,22 @@
                     NSNumber* startX = [constraintX objectForKey:@"start"];
                     NSNumber* endX = [constraintX objectForKey:@"end"];
                     float offsetWidth = proxySize.width;
-                    
+
                     if (startX && endX)
                     {
-                        startX = [NSNumber numberWithFloat:[startX floatValue] / [multiplier floatValue]];
-                        offsetWidth = [endX floatValue] - [startX floatValue];
+                        startX = [NSNumber numberWithFloat:[startX floatValue] / [parallaxAmount floatValue]];
+                        endX = [NSNumber numberWithFloat:[endX floatValue] / [parallaxAmount floatValue]];
+                        offsetWidth = fabsf([startX floatValue]) + fabsf([endX floatValue]);
                     }
                     else
                     {
-                        offsetWidth /= [multiplier floatValue];
+                        offsetWidth /= [parallaxAmount floatValue];
                     }
-                    
+
                     float ratioW = (offsetWidth / 2) / (proxySize.width / 2);
-                    
+
                     proxyCenter.x += translationX * ratioW;
-                    
+
                     if(startX && endX)
                     {
                         if (fromCenterX)
@@ -436,7 +465,7 @@
                             startX = [NSNumber numberWithFloat:[startX floatValue] + (parentSize.width / 2 - proxySize.width / 2)];
                             endX = [NSNumber numberWithFloat:[endX floatValue] + (parentSize.width / 2 - proxySize.width / 2)];
                         }
-                        
+
                         if(endX && proxyCenter.x - proxySize.width / 2 > [endX floatValue])
                         {
                             proxyCenter.x = [endX floatValue] + proxySize.width / 2;
@@ -449,30 +478,31 @@
                 }
                 else if ([constraintAxis isEqualToString:@"x"])
                 {
-                    proxyCenter.x += translationX / [multiplier floatValue];
+                    proxyCenter.x += translationX / [parallaxAmount floatValue];
                 }
-                
+
                 if (constraintY && ([constraintAxis isEqualToString:@"y"] || constraintAxis == nil))
                 {
                     BOOL fromCenterY = [TiUtils boolValue:[constraintY objectForKey:@"fromCenter"] def:NO];
                     NSNumber* startY = [constraintY objectForKey:@"start"];
                     NSNumber* endY = [constraintY objectForKey:@"end"];
                     float offsetHeight = proxySize.height;
-                    
+
                     if (startY && endY)
                     {
-                        startY = [NSNumber numberWithFloat:[startY floatValue] / [multiplier floatValue]];
-                        offsetHeight = [endY floatValue] - [startY floatValue];
+                        startY = [NSNumber numberWithFloat:[startY floatValue] / [parallaxAmount floatValue]];
+                        endY = [NSNumber numberWithFloat:[endY floatValue] / [parallaxAmount floatValue]];
+                        offsetHeight = fabsf([startY floatValue]) + fabsf([endY floatValue]);
                     }
                     else
                     {
-                        offsetHeight /= [multiplier floatValue];
+                        offsetHeight /= [parallaxAmount floatValue];
                     }
-                    
+
                     float ratioH = (offsetHeight / 2) / (proxySize.height / 2);
-                    
+
                     proxyCenter.y += translationY * ratioH;
-                    
+
                     if(startY && endY)
                     {
                         if (fromCenterY)
@@ -480,7 +510,7 @@
                             startY = [NSNumber numberWithFloat:[startY floatValue] + (parentSize.height / 2 - proxySize.height / 2)];
                             endY = [NSNumber numberWithFloat:[endY floatValue] + (parentSize.height / 2 - proxySize.height / 2)];
                         }
-                        
+
                         if(endY && proxyCenter.y - proxySize.height / 2 > [endY floatValue])
                         {
                             proxyCenter.y = [endY floatValue] + proxySize.height / 2;
@@ -493,15 +523,15 @@
                 }
                 else if ([constraintAxis isEqualToString:@"y"])
                 {
-                    proxyCenter.y += translationY / [multiplier floatValue];
+                    proxyCenter.y += translationY / [parallaxAmount floatValue];
                 }
             }
             else
             {
-                proxyCenter.x += translationX / [multiplier floatValue];
-                proxyCenter.y += translationY / [multiplier floatValue];
+                proxyCenter.x += translationX / [parallaxAmount floatValue];
+                proxyCenter.y += translationY / [parallaxAmount floatValue];
             }
-            
+
             if(hasMaxLeft || hasMaxTop || hasMinLeft || hasMinTop)
             {
                 if(hasMaxLeft && proxyCenter.x - proxySize.width / 2 > maxLeft)
@@ -512,7 +542,7 @@
                 {
                     proxyCenter.x = minLeft + proxySize.width / 2;
                 }
-                
+
                 if(hasMaxTop && proxyCenter.y - proxySize.height / 2 > maxTop)
                 {
                     proxyCenter.y = maxTop + proxySize.height / 2;
@@ -524,24 +554,24 @@
             }
 
             [proxy view].center = proxyCenter;
-            
+
             float left = [proxy view].frame.origin.x;
             float top = [proxy view].frame.origin.y;
-            
+
             if (constraintAxis == nil || [constraintAxis isEqualToString:@"x"])
             {
                 [proxy setLeft:[NSNumber numberWithFloat:left]];
-                
+
                 if (ensureRight)
                 {
                     [proxy setRight:[NSNumber numberWithFloat:left * -1]];
                 }
             }
-            
+
             if (constraintAxis == nil || [constraintAxis isEqualToString:@"y"])
             {
                 [proxy setTop:[NSNumber numberWithFloat:top]];
-                
+
                 if (ensureBottom)
                 {
                     [proxy setBottom:[NSNumber numberWithFloat:top * -1]];

@@ -43,11 +43,13 @@
 {
     CGPoint touchStart;
     CGPoint touchEnd;
-    CGRect lastAnimationFrame;
-    NSTimer* animationTimer;
+    CGPoint lastAnimationPosition;
+    NSTimer* monitorTimer;
 }
 
--(id)initWithView:(UIView*)view andOptions:(NSDictionary*)options;
+- (id)initWithView:(UIView*)view andOptions:(NSDictionary*)options;
+- (void)startMonitor;
+- (void)stopMonitor:(id)shouldResetPosition;
 
 @property (nonatomic, retain) TiUIView* view;
 
