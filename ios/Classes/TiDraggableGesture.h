@@ -47,11 +47,9 @@
     NSTimer* monitorTimer;
 }
 
-- (id)initWithView:(UIView*)view andOptions:(NSDictionary*)options;
-- (void)startMonitor;
-- (void)stopMonitor:(id)shouldResetPosition;
+- (id)initWithProxy:(TiViewProxy*)proxy andOptions:(NSDictionary*)options;
 
-@property (nonatomic, retain) TiUIView* view;
+@property (nonatomic, assign) TiViewProxy* proxy;
 
 typedef void (^CallbackBlock)(void);
 

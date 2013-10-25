@@ -114,7 +114,7 @@
     {
         NSDictionary* options = [proxy valueForKeyPath:@"draggableConfig"];
 
-        [[TiDraggableGesture alloc] initWithView:[proxy view] andOptions:options];
+        [[TiDraggableGesture alloc] initWithProxy:proxy andOptions:options];
     }
 
     return proxy;
