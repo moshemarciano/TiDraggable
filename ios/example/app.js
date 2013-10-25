@@ -64,7 +64,7 @@
                     height : 100,
                     borderRadius : 3,
                     backgroundColor : color || 'black',
-                    draggable : {
+                    draggableConfig : {
                         axis : axis,
                         minLeft : 0,
                         maxLeft : Ti.Platform.displayCaps.platformWidth - 100,
