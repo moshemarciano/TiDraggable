@@ -39,7 +39,7 @@
 #import "TiUIView.h"
 #import "TiViewProxy.h"
 
-@interface TiDraggableGesture : TiProxy<UIGestureRecognizerDelegate, TiAnimationDelegate>
+@interface TiDraggableGesture : TiProxy<TiProxyObserver, UIGestureRecognizerDelegate, TiAnimationDelegate>
 {
     CGPoint touchStart;
     CGPoint touchEnd;
@@ -49,6 +49,7 @@
 - (id)initWithProxy:(TiViewProxy*)proxy andOptions:(NSDictionary*)options;
 
 @property (nonatomic, assign) TiViewProxy* proxy;
+@property (nonatomic, retain) UIGestureRecognizer* gesture;
 
 typedef void (^CallbackBlock)(void);
 

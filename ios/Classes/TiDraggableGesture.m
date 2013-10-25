@@ -44,25 +44,31 @@
     if (self = [super init])
     {
         self.proxy = proxy;
-
-        [self rememberProxy:self.proxy];
-        [self setValuesForKeysWithDictionary:options];
-        [self correctMappedProxyPositions];
+        self.gesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panDetected:)];
         
         [self.proxy setValue:self forKey:@"draggable"];
-        [self.proxy.view addGestureRecognizer:[[[UIPanGestureRecognizer alloc]
-                                                initWithTarget:self
-                                                action:@selector(panDetected:)] autorelease]];
+        [self.proxy setProxyObserver:self];
+        
+        [self setValuesForKeysWithDictionary:options];
+        [self correctMappedProxyPositions];
     }
     
     return self;
 }
 
+- (void)proxyDidRelayout:(id)sender
+{
+    BOOL gestureIsAttached = [self.proxy.view.gestureRecognizers containsObject:self.gesture];
+    
+    if (! gestureIsAttached && [self.proxy viewReady])
+    {
+        [self.proxy.view addGestureRecognizer:self.gesture];
+    }
+}
+
 - (void)dealloc
 {
-    [self forgetProxy:self.proxy];
-    
-    RELEASE_TO_NIL_AUTORELEASE(self.proxy);
+    RELEASE_TO_NIL(self.gesture);
     
     [super dealloc];
 }
