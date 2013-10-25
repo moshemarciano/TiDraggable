@@ -66,7 +66,7 @@
 
     if (proxy)
     {
-        [[TiDraggableGesture alloc] initWithView:(TiUIView*)proxy.view andOptions:options];
+        [[TiDraggableGesture alloc] initWithProxy:proxy andOptions:options];
     }
 }
 
