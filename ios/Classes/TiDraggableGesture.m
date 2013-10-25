@@ -63,7 +63,6 @@
     [self forgetProxy:self.proxy];
     
     RELEASE_TO_NIL_AUTORELEASE(self.proxy);
-    RELEASE_TO_NIL_AUTORELEASE(monitorTimer);
     
     [super dealloc];
 }

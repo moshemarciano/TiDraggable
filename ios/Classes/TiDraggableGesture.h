@@ -44,7 +44,6 @@
     CGPoint touchStart;
     CGPoint touchEnd;
     CGPoint lastAnimationPosition;
-    NSTimer* monitorTimer;
 }
 
 - (id)initWithProxy:(TiViewProxy*)proxy andOptions:(NSDictionary*)options;
