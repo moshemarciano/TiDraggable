@@ -35,7 +35,6 @@
  */
 
 #import "TiDraggableGesture.h"
-#import <libkern/OSAtomic.h>
 
 @implementation TiDraggableGesture
 
