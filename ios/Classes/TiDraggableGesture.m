@@ -116,12 +116,30 @@
 {
     ENSURE_UI_THREAD_1_ARG(panRecognizer);
     
+    NSString* axis = [self valueForKey:@"axis"];
+    NSInteger maxLeft = [[self valueForKey:@"maxLeft"] floatValue];
+    NSInteger minLeft = [[self valueForKey:@"minLeft"] floatValue];
+    NSInteger maxTop = [[self valueForKey:@"maxTop"] floatValue];
+    NSInteger minTop = [[self valueForKey:@"minTop"] floatValue];
+    BOOL hasMaxLeft = [self valueForKey:@"maxLeft"] != nil;
+    BOOL hasMinLeft = [self valueForKey:@"minLeft"] != nil;
+    BOOL hasMaxTop = [self valueForKey:@"maxTop"] != nil;
+    BOOL hasMinTop = [self valueForKey:@"minTop"] != nil;
+    BOOL ensureRight = [TiUtils boolValue:[self valueForKey:@"ensureRight"] def:NO];
+    BOOL ensureBottom = [TiUtils boolValue:[self valueForKey:@"ensureBottom"] def:NO];
+    BOOL cancelAnimations = [TiUtils boolValue:[self valueForKey:@"cancelAnimations"] def:YES];
+    
+    if (cancelAnimations && [[self.proxy.view.layer animationKeys] count] > 0)
+    {
+        [self.proxy.view setFrame:[[self.proxy.view.layer presentationLayer] frame]];
+        [self.proxy.view.layer removeAllAnimations];
+    }
+    
     CGPoint translation = [panRecognizer translationInView:self.proxy.view];
     CGPoint newCenter = self.proxy.view.center;
     CGSize size = self.proxy.view.frame.size;
     
-    float tmpTranslationX;
-    float tmpTranslationY;
+    float tmpTranslationX, tmpTranslationY;
     
     if ([panRecognizer state] == UIGestureRecognizerStateBegan)
     {
@@ -154,18 +172,6 @@
         newCenter.x += translation.x;
         newCenter.y += translation.y;
     }
-    
-    NSString* axis = [self valueForKey:@"axis"];
-    NSInteger maxLeft = [[self valueForKey:@"maxLeft"] floatValue];
-    NSInteger minLeft = [[self valueForKey:@"minLeft"] floatValue];
-    NSInteger maxTop = [[self valueForKey:@"maxTop"] floatValue];
-    NSInteger minTop = [[self valueForKey:@"minTop"] floatValue];
-    BOOL hasMaxLeft = [self valueForKey:@"maxLeft"] != nil;
-    BOOL hasMinLeft = [self valueForKey:@"minLeft"] != nil;
-    BOOL hasMaxTop = [self valueForKey:@"maxTop"] != nil;
-    BOOL hasMinTop = [self valueForKey:@"minTop"] != nil;
-    BOOL ensureRight = [TiUtils boolValue:[self valueForKey:@"ensureRight"] def:NO];
-    BOOL ensureBottom = [TiUtils boolValue:[self valueForKey:@"ensureBottom"] def:NO];
     
     if(hasMaxLeft || hasMaxTop || hasMinLeft || hasMinTop)
     {
@@ -326,8 +332,16 @@
 {
     if ([proxies isKindOfClass:[NSArray class]])
     {
+        BOOL cancelAnimations = [TiUtils boolValue:[self valueForKey:@"cancelAnimations"] def:YES];
+        
         [proxies enumerateObjectsUsingBlock:^(id map, NSUInteger index, BOOL *stop) {
             TiViewProxy* proxy = [map objectForKey:@"view"];
+            
+            if (cancelAnimations && [[proxy.view.layer animationKeys] count] > 0)
+            {
+                [proxy.view setFrame:[[proxy.view.layer presentationLayer] frame]];
+                [proxy.view.layer removeAllAnimations];
+            }
             
             CGPoint proxyCenter = [proxy view].center;
             CGSize proxySize = [proxy view].frame.size;
