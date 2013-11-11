@@ -193,7 +193,22 @@
         }
     }
     
-    self.proxy.view.center = newCenter;
+    LayoutConstraint* layoutProperties = [self.proxy layoutProperties];
+    
+    layoutProperties->top = TiDimensionDip(newCenter.y - size.height / 2);
+    layoutProperties->left = TiDimensionDip(newCenter.x - size.width / 2);
+    
+    if (ensureBottom)
+    {
+        layoutProperties->bottom = TiDimensionDip(layoutProperties->top.value * -1);
+    }
+    
+    if (ensureRight)
+    {
+        layoutProperties->right = TiDimensionDip(layoutProperties->left.value * -1);
+    }
+    
+    [self.proxy refreshView:nil];
     
     [panRecognizer setTranslation:CGPointZero inView:self.proxy.view];
     
@@ -570,30 +585,22 @@
                 }
             }
             
-            [proxy view].center = proxyCenter;
+            LayoutConstraint* layoutProperties = [proxy layoutProperties];
             
-            float left = [proxy view].frame.origin.x;
-            float top = [proxy view].frame.origin.y;
+            layoutProperties->top = TiDimensionDip(proxyCenter.y - proxySize.height / 2);
+            layoutProperties->left = TiDimensionDip(proxyCenter.x - proxySize.width / 2);
             
-            if (constraintAxis == nil || [constraintAxis isEqualToString:@"x"])
+            if (ensureBottom)
             {
-                [proxy setLeft:[NSNumber numberWithFloat:left]];
-                
-                if (ensureRight)
-                {
-                    [proxy setRight:[NSNumber numberWithFloat:left * -1]];
-                }
+                layoutProperties->bottom = TiDimensionDip(layoutProperties->top.value * -1);
             }
             
-            if (constraintAxis == nil || [constraintAxis isEqualToString:@"y"])
+            if (ensureRight)
             {
-                [proxy setTop:[NSNumber numberWithFloat:top]];
-                
-                if (ensureBottom)
-                {
-                    [proxy setBottom:[NSNumber numberWithFloat:top * -1]];
-                }
+                layoutProperties->right = TiDimensionDip(layoutProperties->left.value * -1);
             }
+            
+            [proxy refreshView:nil];
         }];
     }
 }
