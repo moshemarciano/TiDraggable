@@ -33,15 +33,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package ti.draggable;
 
 import org.appcelerator.kroll.KrollModule;
 import org.appcelerator.kroll.annotations.Kroll;
+import org.appcelerator.kroll.common.Log;
 
 @Kroll.module(name="Draggable", id="ti.draggable")
-public class DraggableModule extends KrollModule {
-	public DraggableModule() {
+public class DraggableModule extends KrollModule
+{
+	private static final String TAG = "TiDraggable";
+	private static Boolean DEBUGGING = true;
+
+	public DraggableModule()
+	{
 		super();
+	}
+	
+	public static void debugLog(String message)
+	{
+		if (DEBUGGING)
+		{
+			Log.d(TAG, message);
+		}
+	}
+	
+	@Kroll.setProperty
+	public void setDebug(Boolean debug)
+	{
+		DEBUGGING = debug;
+	}
+	
+	@Kroll.getProperty
+	public Boolean getDebug()
+	{
+		return DEBUGGING;
 	}
 }

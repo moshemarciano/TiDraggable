@@ -45,52 +45,30 @@
             backgroundColor : 'white',
             exitOnClose : true
         }),
-        subscribe = function (proxy, observer) {
-            var key, events, eIndex;
-
-            for (key in observer) {
-                if (typeof observer[key] === 'function') {
-                    events = key.split(' ');
-
-                    for (eIndex in events) {
-                        proxy.addEventListener(events[eIndex], observer[key]);
-                    }
-                }
+        scrollingView = Ti.UI.createScrollView({
+            layout : 'vertical'
+        }),
+        topView = Draggable.createView({
+            backgroundColor : 'green',
+            draggableConfig : {
+                axis : 'x',
+                ensureRight : true
             }
-        },
-        createDraggableSquare = function (name, color, axis) {
-            var view = Draggable.createView({
-                    width : 100,
-                    height : 100,
-                    axis : axis,
-                    borderRadius : 3,
-                    minLeft : 0,
-                    maxLeft : Ti.Platform.displayCaps.platformWidth - 100,
-                    minTop : 0,
-                    maxTop : Ti.Platform.displayCaps.platformHeight - 120,
-                    backgroundColor : color || 'black'
-                });
+        }),
+        underView = Ti.UI.createView({
+            backgroundColor : 'red'
+        });
 
-            view.add(Ti.UI.createLabel({
-                text : name
-            }));
+    for (var i = 0; i < 20; i++) {
+        scrollingView.add(Ti.UI.createView({
+            top : 10,
+            height : 200,
+            backgroundColor : 'blue'
+        }));
+    };
 
-            subscribe(view, {
-                'start move end cancel' : function (e) {
-                    console.log(
-                        'Event: ' + e.type,
-                        'Left: ' + e.left,
-                        'Top: ' + e.top
-                    );
-                }
-            });
-
-            return view;
-        };
-
-    mainWindow.add(createDraggableSquare('Horizontal', 'red', 'x'));
-    mainWindow.add(createDraggableSquare('Vertical', 'blue', 'y'));
-    mainWindow.add(createDraggableSquare('Free', 'green'));
-
+    topView.add(scrollingView);
+    mainWindow.add(underView);
+    mainWindow.add(topView);
     mainWindow.open();
 }());
