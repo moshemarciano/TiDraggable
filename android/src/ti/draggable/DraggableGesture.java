@@ -55,7 +55,7 @@ public class DraggableGesture implements OnTouchListener
 {
 	protected TiUIView contentView;
 	protected TiViewProxy proxy;
-	protected WeakReference<KrollDict> config;
+	protected WeakReference<ConfigProxy> config;
 	protected VelocityTracker velocityTracker;
 	protected ViewConfiguration vc;
 	protected int threshold;
@@ -69,7 +69,7 @@ public class DraggableGesture implements OnTouchListener
 	protected double lastTop;
 	public boolean isBeingDragged = false;
 	
-	public DraggableGesture(TiViewProxy proxy, TiUIView view, WeakReference<KrollDict> config)
+	public DraggableGesture(TiViewProxy proxy, TiUIView view, WeakReference<ConfigProxy> config)
 	{
 		this.proxy = proxy;
 		this.contentView = view;
@@ -101,7 +101,8 @@ public class DraggableGesture implements OnTouchListener
 			  screenY = event.getRawY();
 		
 		View nativeView = this.contentView.getOuterView();
-		KrollDict weakConfig = this.config.get();
+		ConfigProxy weakConfig = this.config.get();
+		KrollDict configProps = weakConfig.getProperties();
 		
 		if (this.velocityTracker != null)
 		{
@@ -120,8 +121,8 @@ public class DraggableGesture implements OnTouchListener
 			case MotionEvent.ACTION_MOVE:
 				if (this.isBeingDragged)
 				{
-					boolean xAxis = ! weakConfig.isNull("axis") && weakConfig.getString("axis").equals("x"),
-							yAxis = ! weakConfig.isNull("axis") && weakConfig.getString("axis").equals("y"),
+					boolean xAxis = ! configProps.isNull("axis") && configProps.getString("axis").equals("x"),
+							yAxis = ! configProps.isNull("axis") && configProps.getString("axis").equals("y"),
 							noAxis = ! xAxis && ! yAxis;
 					
 					double leftEdge = screenX + startLeft,
@@ -138,9 +139,9 @@ public class DraggableGesture implements OnTouchListener
 					
 					if (noAxis || xAxis)
 					{
-						if (! weakConfig.isNull("minLeft"))
+						if (! configProps.isNull("minLeft"))
 						{
-							double _minLeft = weakConfig.getDouble("minLeft");
+							double _minLeft = weakConfig.getDimensionAsPixels("minLeft");
 							
 							if (leftEdge <= _minLeft)
 							{
@@ -148,9 +149,9 @@ public class DraggableGesture implements OnTouchListener
 							}
 						}
 						
-						if (! weakConfig.isNull("maxLeft"))
+						if (! configProps.isNull("maxLeft"))
 						{
-							double _maxLeft = weakConfig.getDouble("maxLeft");
+							double _maxLeft = weakConfig.getDimensionAsPixels("maxLeft");
 							
 							if (leftEdge >= _maxLeft)
 							{
@@ -161,9 +162,9 @@ public class DraggableGesture implements OnTouchListener
 					
 					if (noAxis || yAxis)
 					{
-						if (! weakConfig.isNull("minTop"))
+						if (! configProps.isNull("minTop"))
 						{
-							double _minTop = weakConfig.getDouble("minTop");
+							double _minTop = weakConfig.getDimensionAsPixels("minTop");
 							
 							if (topEdge <= _minTop)
 							{
@@ -171,9 +172,9 @@ public class DraggableGesture implements OnTouchListener
 							}
 						}
 						
-						if (! weakConfig.isNull("maxTop"))
+						if (! configProps.isNull("maxTop"))
 						{
-							double _maxTop = weakConfig.getDouble("maxTop");
+							double _maxTop = weakConfig.getDimensionAsPixels("maxTop");
 							
 							if (topEdge >= _maxTop)
 							{
@@ -299,8 +300,9 @@ public class DraggableGesture implements OnTouchListener
 	protected void translateMappedProxies(double translationLeft, double translationTop)
 	{
 		View nativeView = this.contentView.getOuterView();
-		KrollDict weakConfig = this.config.get();
-		Object[] maps = (Object[]) weakConfig.get("maps");
+		ConfigProxy weakConfig = this.config.get();
+		KrollDict configProps = weakConfig.getProperties();
+		Object[] maps = (Object[]) configProps.get("maps");
 		
 		if (maps != null)
 		{
@@ -331,8 +333,8 @@ public class DraggableGesture implements OnTouchListener
 						Integer parentWidth = nativeView.getWidth(),
 								xStart = xConstraint.getInt("start"),
 								xEnd = xConstraint.getInt("end"),
-								parentMinLeft = weakConfig.getInt("minLeft"),
-								parentMaxLeft = weakConfig.getInt("maxLeft");
+								parentMinLeft = weakConfig.getDimensionAsPixels("minLeft"),
+								parentMaxLeft = weakConfig.getDimensionAsPixels("maxLeft");
 						
 						double proxyWidth = mappedView.getWidth(),
 							   xStartParallax = xStart / parallaxAmount,
@@ -374,8 +376,8 @@ public class DraggableGesture implements OnTouchListener
 						Integer parentHeight = nativeView.getHeight(),
 								yStart = yConstraint.getInt("start"),
 								yEnd = yConstraint.getInt("end"),
-								parentMinTop = weakConfig.getInt("minTop"),
-								parentMaxTop = weakConfig.getInt("maxTop");
+								parentMinTop = weakConfig.getDimensionAsPixels("minTop"),
+								parentMaxTop = weakConfig.getDimensionAsPixels("maxTop");
 						
 						double proxyHeight = mappedView.getHeight(),
 							   yStartParallax = yStart / parallaxAmount,
@@ -431,9 +433,10 @@ public class DraggableGesture implements OnTouchListener
 		}
 	}
 	
-	protected void prepareMappedProxies(KrollDict config)
+	protected void prepareMappedProxies(ConfigProxy configProxy)
 	{
-		Object[] maps = (Object[]) config.get("maps");
+		KrollDict configProps = configProxy.getProperties();
+		Object[] maps = (Object[]) configProps.get("maps");
 		
 		if (maps != null)
 		{

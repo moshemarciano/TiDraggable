@@ -8,78 +8,61 @@ import org.appcelerator.kroll.KrollPropertyChange;
 import org.appcelerator.kroll.KrollProxy;
 import org.appcelerator.kroll.KrollProxyListener;
 import org.appcelerator.kroll.annotations.Kroll;
+import org.appcelerator.titanium.TiApplication;
+import org.appcelerator.titanium.TiDimension;
+import org.appcelerator.titanium.util.TiConvert;
+
+import android.view.View;
 
 @Kroll.proxy
 public class ConfigProxy extends KrollProxy implements KrollProxyListener
 {
+	protected KrollDict dimensions = new KrollDict();
 	protected WeakReference<DraggableImpl> draggableImpl;
 	
 	public ConfigProxy(KrollDict config)
 	{
 		super();
 		
-		boolean ensureRight = false;
-		boolean ensureBottom = false;
-		Integer minLeft = null;
-		Integer maxLeft = null;
-		Integer minTop = null;
-		Integer maxTop = null;
-		String axis = null;
 		Object[] maps = null;
 
 		if (config != null)
-		{
-			if (config.containsKeyAndNotNull("ensureRight"))
-			{
-				ensureRight = config.getBoolean("ensureRight");
-			}
-			
-			if (config.containsKeyAndNotNull("ensureBottom"))
-			{
-				ensureBottom = config.getBoolean("ensureBottom");
-			}
-			
-			if (config.containsKeyAndNotNull("minLeft"))
-			{
-				minLeft = config.getInt("minLeft");
-			}
-
-			if (config.containsKeyAndNotNull("maxLeft"))
-			{
-				maxLeft = config.getInt("maxLeft");
-			}
-
-			if (config.containsKeyAndNotNull("minTop"))
-			{
-				minTop = config.getInt("minTop");
-			}
-
-			if (config.containsKeyAndNotNull("maxTop"))
-			{
-				maxTop = config.getInt("maxTop");
-			}
-
-			if (config.containsKeyAndNotNull("axis"))
-			{
-				axis = config.getString("axis");
-			}
-			
+		{			
 			if (config.containsKeyAndNotNull("maps"))
 			{
 				maps = (Object[]) config.get("maps");
 			}
 		}
 		
-		properties.put("ensureRight", ensureRight);
-		properties.put("ensureBottom", ensureBottom);
-		properties.put("minLeft", minLeft);
-		properties.put("maxLeft", maxLeft);
-		properties.put("minTop", minTop);
-		properties.put("maxTop", maxTop);
-		properties.put("axis", axis);
+		properties.put("ensureRight", TiConvert.toBoolean(config, "ensureRight", false));
+		properties.put("ensureBottom", TiConvert.toBoolean(config, "ensureBottom", false));
+		properties.put("minLeft", config.containsKeyAndNotNull("minLeft") ? TiConvert.toDouble(config, "minLeft") : null);
+		properties.put("maxLeft", config.containsKeyAndNotNull("minLeft") ? TiConvert.toDouble(config, "maxLeft") : null);
+		properties.put("minTop", config.containsKeyAndNotNull("minTop") ? TiConvert.toDouble(config, "minTop") : null);
+		properties.put("maxTop", config.containsKeyAndNotNull("maxTop") ? TiConvert.toDouble(config, "maxTop") : null);
+		properties.put("axis", config.containsKeyAndNotNull("axis") ? TiConvert.toString(config, "axis") : null);
 		properties.put("maps", maps);
+
+		dimensions.put("minLeft", config.containsKeyAndNotNull("minLeft") ? TiConvert.toTiDimension(config, "minLeft", TiDimension.TYPE_LEFT) : null);
+		dimensions.put("maxLeft", config.containsKeyAndNotNull("minLeft") ? TiConvert.toTiDimension(config, "maxLeft", TiDimension.TYPE_LEFT) : null);
+		dimensions.put("minTop", config.containsKeyAndNotNull("minTop") ? TiConvert.toTiDimension(config, "minTop", TiDimension.TYPE_TOP) : null);
+		dimensions.put("maxTop", config.containsKeyAndNotNull("maxTop") ? TiConvert.toTiDimension(config, "maxTop", TiDimension.TYPE_TOP) : null);
 		
 		setModelListener(this);
+	}
+	
+	public Integer getDimensionAsPixels(String key)
+	{
+		TiDimension dimension = (TiDimension) dimensions.get(key);
+		
+		if (dimension != null)
+		{
+			View decorView = TiApplication.getAppCurrentActivity().getWindow().getDecorView();
+			
+			return dimension.getAsPixels(decorView);
+		}
+		
+		return null;
 	}
 	
 	public void setDraggableImpl(WeakReference<DraggableImpl> draggableView)
@@ -134,17 +117,20 @@ public class ConfigProxy extends KrollProxy implements KrollProxyListener
 	{
 		if (key.equals("maps"))
 		{
-			if (newValue != null)
-			{
-				DraggableModule.debugLog(newValue.toString());
-			}
-			
 			DraggableImpl impl = getDraggableImpl();
 			
 			if (impl != null)
 			{
-				getDraggableImpl().listener.prepareMappedProxies(properties);
+				getDraggableImpl().listener.prepareMappedProxies(this);
 			}
+		}
+		else if (key.equals("minLeft") || key.equals("maxLeft"))
+		{
+			dimensions.put(key, TiConvert.toTiDimension(TiConvert.toString(newValue), TiDimension.TYPE_LEFT));
+		}
+		else if (key.equals("minTop") || key.equals("maxTop"))
+		{
+			dimensions.put(key, TiConvert.toTiDimension(TiConvert.toString(newValue), TiDimension.TYPE_TOP));
 		}
 	}
 }

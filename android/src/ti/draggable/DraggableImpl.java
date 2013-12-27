@@ -37,7 +37,6 @@ package ti.draggable;
 
 import java.lang.ref.WeakReference;
 
-import org.appcelerator.kroll.KrollDict;
 import org.appcelerator.kroll.KrollProxy;
 import org.appcelerator.titanium.TiC;
 import org.appcelerator.titanium.proxy.TiViewProxy;
@@ -107,8 +106,7 @@ public class DraggableImpl extends TiUIView {
 	protected void setupDraggableGesture()
 	{
 		ConfigProxy draggableConfig = (ConfigProxy) proxy.getProperty("draggable");
-		KrollDict config = draggableConfig.getProperties();
-		WeakReference<KrollDict> weakConfig = new WeakReference<KrollDict>(config);
+		WeakReference<ConfigProxy> weakConfig = new WeakReference<ConfigProxy>(draggableConfig);
 		
 		this.getLayoutParams().autoFillsHeight = true;
         this.getLayoutParams().autoFillsWidth = true;
