@@ -114,7 +114,12 @@
 - (void)panDetected:(UIPanGestureRecognizer *)panRecognizer
 {
     ENSURE_UI_THREAD_1_ARG(panRecognizer);
-
+    
+    if ([TiUtils boolValue:[self valueForKey:@"enabled"] def:YES] == NO)
+    {
+        return;
+    }
+    
     NSString* axis = [self valueForKey:@"axis"];
     NSInteger maxLeft = [[self valueForKey:@"maxLeft"] floatValue];
     NSInteger minLeft = [[self valueForKey:@"minLeft"] floatValue];
