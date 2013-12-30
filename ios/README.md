@@ -6,7 +6,7 @@ An enhanced fork of the original [TiDraggable](https://github.com/pec1985/TiDrag
 
 In your `tiapp.xml` file add the following to the `modules` node:
 
-	<module version="1.3.2" platform="iphone">ti.draggable<module>
+	<module version="2.0.0">ti.draggable<module>
 
 ## Usage
 
