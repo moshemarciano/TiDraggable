@@ -74,7 +74,7 @@ public class DraggableImpl extends TiUIView {
 					listener.stopDrag(event);
 					break;
 			}
-			
+
 			return listener.isBeingDragged;
 	    }
 	}
@@ -98,24 +98,24 @@ public class DraggableImpl extends TiUIView {
 				arrangement = LayoutArrangement.VERTICAL;
 			}
 		}
-		
+
 		setNativeView(new DraggableView(proxy.getActivity(), arrangement));
 		setupDraggableGesture();
 	}
-	
+
 	protected void setupDraggableGesture()
 	{
 		ConfigProxy draggableConfig = (ConfigProxy) proxy.getProperty("draggable");
 		WeakReference<ConfigProxy> weakConfig = new WeakReference<ConfigProxy>(draggableConfig);
-		
+
 		this.getLayoutParams().autoFillsHeight = true;
         this.getLayoutParams().autoFillsWidth = true;
         this.listener = new DraggableGesture((TiViewProxy) proxy, this, weakConfig);
-        
+
 		getOuterView().setOnTouchListener(listener);
-		
+
 		listener.prepareMappedProxies(weakConfig.get());
-		
+
 		draggableConfig.setDraggableImpl(new WeakReference<DraggableImpl>(this));
 	}
 

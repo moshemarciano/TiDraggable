@@ -44,21 +44,21 @@ import org.appcelerator.titanium.view.TiUIView;
 import android.app.Activity;
 
 @Kroll.proxy(creatableInModule = DraggableModule.class)
-public class ViewProxy extends TiViewProxy 
+public class ViewProxy extends TiViewProxy
 {
-	
+
 	public ViewProxy()
 	{
 		super();
 	}
-	
+
 	@Override
-    public void handleCreationDict(KrollDict options) 
+    public void handleCreationDict(KrollDict options)
     {
 		super.handleCreationDict(options);
-		
+
 		ConfigProxy config = new ConfigProxy(options.getKrollDict("draggableConfig"));
-		
+
 		this.setProperty("draggable", config);
     }
 
@@ -68,19 +68,19 @@ public class ViewProxy extends TiViewProxy
 		if (this.view == null)
 		{
 			TiUIView view = new DraggableImpl(this);
-	        
+
 	        setView(view);
-	        
+
 	        return view;
 		}
-		
+
 		return this.view;
 	}
-	
+
 	@Kroll.getProperty @Kroll.method
 	public KrollProxy getDraggable()
 	{
 		return (KrollProxy) this.getProperty("draggable");
 	}
-	
+
 }

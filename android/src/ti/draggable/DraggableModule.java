@@ -49,7 +49,7 @@ public class DraggableModule extends KrollModule
 	{
 		super();
 	}
-	
+
 	public static void debugLog(String message)
 	{
 		if (DEBUGGING)
@@ -57,13 +57,13 @@ public class DraggableModule extends KrollModule
 			Log.d(TAG, message);
 		}
 	}
-	
+
 	@Kroll.setProperty
 	public void setDebug(Boolean debug)
 	{
 		DEBUGGING = debug;
 	}
-	
+
 	@Kroll.getProperty
 	public Boolean getDebug()
 	{
