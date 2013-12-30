@@ -1,6 +1,5 @@
 /*global require,console,Ti*/
 /*jslint devel: true, forin: true */
-
 /**
  * An enhanced fork of the original TiDraggable module by Pedro Enrique,
  * allows for simple creation of "draggable" views.
@@ -43,32 +42,58 @@
     var Draggable = require('ti.draggable'),
         mainWindow = Ti.UI.createWindow({
             backgroundColor : 'white',
-            exitOnClose : true
+            exitOnClose : true,
+            fullscreen : true,
+            navBarHidden : true
         }),
-        scrollingView = Ti.UI.createScrollView({
-            layout : 'vertical'
-        }),
-        topView = Draggable.createView({
-            backgroundColor : 'green',
-            draggableConfig : {
-                axis : 'x',
-                ensureRight : true
+        subscribe = function (proxy, observer) {
+            var key, events, eIndex;
+
+            for (key in observer) {
+                if (typeof observer[key] === 'function') {
+                    events = key.split(' ');
+
+                    for (eIndex in events) {
+                        proxy.addEventListener(events[eIndex], observer[key]);
+                    }
+                }
             }
-        }),
-        underView = Ti.UI.createView({
-            backgroundColor : 'red'
-        });
+        },
+        createDraggableSquare = function (name, color, axis) {
+            var view = Draggable.createView({
+                    width : 100,
+                    height : 100,
+                    borderRadius : 3,
+                    backgroundColor : color || 'black',
+                    draggableConfig : {
+                        axis : axis,
+                        minLeft : 0,
+                        maxLeft : Ti.Platform.displayCaps.platformWidth,
+                        minTop : 0,
+                        maxTop : Ti.Platform.displayCaps.platformHeight,
+                    }
+                });
 
-    for (var i = 0; i < 20; i++) {
-        scrollingView.add(Ti.UI.createView({
-            top : 10,
-            height : 200,
-            backgroundColor : 'blue'
-        }));
-    };
+            view.add(Ti.UI.createLabel({
+                text : name
+            }));
 
-    topView.add(scrollingView);
-    mainWindow.add(underView);
-    mainWindow.add(topView);
+            subscribe(view, {
+                'start move end cancel' : function (e) {
+                    console.log(
+                        'Event: ' + e.type,
+                        'Left: ' + e.left,
+                        'Top: ' + e.top
+                    );
+                }
+            });
+
+            return view;
+        };
+
+    mainWindow.add(createDraggableSquare('Horizontal', 'red', 'x'));
+    mainWindow.add(createDraggableSquare('Vertical', 'blue', 'y'));
+    mainWindow.add(createDraggableSquare('Free', 'green'));
+
     mainWindow.open();
 }());
