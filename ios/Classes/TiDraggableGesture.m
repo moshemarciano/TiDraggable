@@ -194,18 +194,25 @@
     }
 
     LayoutConstraint* layoutProperties = [self.proxy layoutProperties];
-
-    layoutProperties->top = TiDimensionDip(newCenter.y - size.height / 2);
-    layoutProperties->left = TiDimensionDip(newCenter.x - size.width / 2);
-
-    if (ensureBottom)
+    
+    if ([self valueForKey:@"axis"] == nil || [[self valueForKey:@"axis"] isEqualToString:@"x"])
     {
-        layoutProperties->bottom = TiDimensionDip(layoutProperties->top.value * -1);
+        layoutProperties->left = TiDimensionDip(newCenter.x - size.width / 2);
+        
+        if (ensureRight)
+        {
+            layoutProperties->right = TiDimensionDip(layoutProperties->left.value * -1);
+        }
     }
-
-    if (ensureRight)
+    
+    if ([self valueForKey:@"axis"] == nil || [[self valueForKey:@"axis"] isEqualToString:@"y"])
     {
-        layoutProperties->right = TiDimensionDip(layoutProperties->left.value * -1);
+        layoutProperties->top = TiDimensionDip(newCenter.y - size.height / 2);
+        
+        if (ensureBottom)
+        {
+            layoutProperties->bottom = TiDimensionDip(layoutProperties->top.value * -1);
+        }
     }
 
     [self.proxy refreshView:nil];
@@ -220,26 +227,6 @@
 
     float left = [panningProxy view].frame.origin.x;
     float top = [panningProxy view].frame.origin.y;
-
-    if ([self valueForKey:@"axis"] == nil || [[self valueForKey:@"axis"] isEqualToString:@"x"])
-    {
-        [panningProxy setLeft:[NSNumber numberWithFloat:left]];
-
-        if (ensureRight)
-        {
-            [panningProxy setRight:[NSNumber numberWithFloat:left * -1]];
-        }
-    }
-
-    if ([self valueForKey:@"axis"] == nil || [[self valueForKey:@"axis"] isEqualToString:@"y"])
-    {
-        [panningProxy setTop:[NSNumber numberWithFloat:top]];
-
-        if (ensureBottom)
-        {
-            [panningProxy setBottom:[NSNumber numberWithFloat:top * -1]];
-        }
-    }
 
     NSMutableDictionary *tiProps = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                     [NSNumber numberWithFloat:left], @"left",
@@ -328,16 +315,20 @@
             {
                 [proxy view].center = proxyCenter;
             }
+            
+            LayoutConstraint* layoutProperties = [proxy layoutProperties];
 
             if (constraintX)
             {
-                [proxy setLeft:[NSNumber numberWithFloat:[proxy view].frame.origin.x]];
+                layoutProperties->left = TiDimensionDip([proxy view].frame.origin.x);
             }
 
             if (constraintY)
             {
-                [proxy setTop:[NSNumber numberWithFloat:[proxy view].frame.origin.y]];
+                layoutProperties->top = TiDimensionDip([proxy view].frame.origin.y);
             }
+            
+            [proxy refreshView:nil];
         }];
     }
 }
