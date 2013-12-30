@@ -4,13 +4,18 @@ An enhanced fork of the original [TiDraggable](https://github.com/pec1985/TiDrag
 
 ## Enhancements & Fixes
 
+- Improved drag performance for iOS and Android.
 - Updated public APIs for more seamless integration.
 - Removed the InfiniteScroll class as it doesn't really have much to do with the overall module.
 - Removed unnecessary APIs to reduce overall module footprint.
 - Removed unused variables and organized imports.
 - Added ability to unset boundaries.
 - Mapped the missing `cancel` gesture to the `end` gesture (firing the respective event).
-- Added ensureRight and ensureBottom, this allows for stable dragging of views where the dimensions are not known.
+- Added `ensureRight` and `ensureBottom`, this allows for stable dragging of views where the dimensions are not known.
+- Added `enabled` boolean property for toggeling drag
+- Views can be mapped and translated with a draggable view.
+- Draggable implementation now has its own configurable property called `draggable`.
+- iOS: Supports all Ti.UI.View subclasses and Ti.UI.View wrapped views (View, Window, Label)
 - Android: Fixed a bug where touch events were not correctly passed to children or bubbled to the parent.
 - Android: Fixed a bug where min and max bounds were being incorrectly reported after being set.
 - Android: Improved drag tracking. It plays nice with child views now.
@@ -39,86 +44,89 @@ mainWindow.open();
 
 ### Draggable.createView(viewOptions);
 
-Create a draggable view, as this view extends a normal Titanium view all properties and methods are inherited.
+Create a draggable view. All of Titanium's properties are supported along the additional `draggableConfig` property containing any options that should be set upon creation. See [Options](#options)
 
-- viewOptions (Object):
-    - Object containing view properties
+> When the draggable proxy is created a new property is set called `draggable` which stores all the configuration properties and allows for options to be updated after creation.
 
-## Draggable View Reference
+**iOS Notes**
+You can pass almost all of iOS' supported Ti.UI creation methods to the draggable module such as `Draggable.createView( ... )` or `Draggable.createWindow( ... )`. While `Ti.UI.View` and `Ti.UI.Window` are fully supported on iOS other APIs haven't been fully tested.
 
-### DraggableView.setIsDraggable(isDraggable);
+**Android Notes**
+Android only supports the creation of Ti.UI.Views. At this time there are no plans to add support for other APIs.
 
-Set whether or not a view can be draggable.
+## Options
 
-- isDraggable (Boolean):
-    - Draggable status flag
+Options can be set on view creation using `draggableConfig` or after creation using `DraggableView.draggable.setConfig( ... )`
 
-### DraggableView.setAxis(axis);
+***
 
-Set which axis a view can be dragged on.
+The `setConfig` method can set options two different ways. You can pass an `object` containing the parameters you with to set or you can pass a key-value pair.
 
-- axis (String):
-    - Axis in which the draggable view will be constrained. Can either be `x` or `y`.
+**Setting Options With An Object**
+```javascript
+DraggableView.draggable.setConfig('enabled', false);
+```
 
-### DraggableView.setMinLeft(minLeftBoundary);
+**Setting Options With An Object**
+```javascript
+DraggableView.draggable.setConfig({
+  enabled : false
+});
+```
 
-Set the minimum left-most boundary on a view.
+***
 
-- minLeftBoundary (Integer|null):
-    - The minimum value the left side of the draggable view can be dragged.
+### `Boolean` - enabled
+Flag to enable or disable dragging.
 
-### DraggableView.setMaxLeft(maxLeftBoundary);
+### `Number` - minLeft
+The left-most boundary of the view being dragged. Can be set to `null` to disable property.
 
-Set the maximum left-most boundary on a view.
+### `Number` - maxLeft
+The right-most boundary of the view being dragged. Can be set to `null` to disable property.
 
-- maxLeftBoundary (Integer|null):
-    - The maximum value the left side of the draggable view can be dragged.
+### `Number` - minTop
+The top-most boundary of the view being dragged. Can be set to `null` to disable property.
 
-### DraggableView.setMinTop(minTopBoundary);
+### `Number` - maxTop
+The bottom-most boundary of the view being dragged. Can be set to `null` to disable property.
 
-Set the minimum top-most boundary on a view.
+### `Boolean` - ensureRight
+Ensure that that the `right` edge of the view being dragged keeps its integrity. Can be set to `null` to disable property.
 
-- minTopBoundary (Integer|null):
-    - The minimum value the top side of the draggable view can be dragged.
+### `Boolean` - ensureBottom
+Ensure that that the `bottom` edge of the view being dragged keeps its integrity. Can be set to `null` to disable property.
 
-### DraggableView.setMaxTop(maxTopBoundary);
+### `Array` - maps
+An array of views that should be translated along with the view being dragged. See [View Mapping](#view-mapping).
 
-Set the maximum top-most boundary on a view.
+## View Mapping
 
-- maxTopBoundary (Integer|null):
-    - The maximum value the top side of the draggable view can be dragged.
+In the case where you want multiple views to be translated at the same time you can pass the `maps` property to the draggable config. This functionality is useful for creating parallax or 1:1 movements.
 
-### DraggableView.setEnsureRight(ensureRight);
+The `maps` property accepts an array of objects containing any of the following. The `view` property is required.
 
-If a view is created without a set dimension width, it's size will be updated as it moves. This is not desirable in most situations.
+### Map Options
 
-- ensureRight (Boolean):
-    - Boolean flag that when set to true will ensure the `right` properties are the opposite the `left`.
+### `Ti.UI.View` - view
+The view to translate.
 
-### DraggableView.setEnsureBottom(ensureBottom);
+### `Number` - parallaxAmount
+A positive or negative number. Numbers less than `|1|` such as `0.1`, `0.2`, or `0.3` will cause the translation to move *faster* then the translation. A `parallaxAmount` of 1 will translate mapped views 1:1. A parallaxAmount `> 1` will result in a slower translation.
 
-If a view is created without a set dimension height, it's size will be updated as it moves. This is not desirable in most situations.
+### `Object` - constrain
+An object containing the boundaries of the mapped view. Can have the following:
 
-- ensureBottom (Boolean):
-    - Boolean flag that when set to true will ensure the `bottom` properties are the opposite the `top`.
-
-### DraggableView.setCanRotate(canRotate);
-
-Sets the view to be rotateable. (two-finger rotate gesture)
-
-- canRotate (Boolean):
-    - Boolean flag to enable or disable rotation.
-
-> Note: This method has not been implemented for Android.
-
-### DraggableView.setCanResize(canResize);
-
-Sets the view to be scaleable (two-finger pinch gesture).
-
-- canResize (Boolean):
-    - Boolean flag to enable or disable resizing.
-
-> Note: This method has not been implemented for Android.
+* **x**
+  * **start** The start position for the mapped view.
+  * **end** The end position for the mapped view.
+  * **callback** A function that will receive the completed percentage of the mapped translation. . Android does not support this option.
+  * **fromCenter** Translate the view from its center. Android does not support this option.
+* **y**
+  * **start** The start position for the mapped view.
+  * **end** The end position for the mapped view.
+  * **callback** A function that will receive the completed percentage of the mapped translation. . Android does not support this option.
+  * **fromCenter** Translate the view from its center. Android does not support this option.
 
 ## Credits & Notes
 
