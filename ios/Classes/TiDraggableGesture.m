@@ -114,12 +114,12 @@
 - (void)panDetected:(UIPanGestureRecognizer *)panRecognizer
 {
     ENSURE_UI_THREAD_1_ARG(panRecognizer);
-    
+
     if ([TiUtils boolValue:[self valueForKey:@"enabled"] def:YES] == NO)
     {
         return;
     }
-    
+
     NSString* axis = [self valueForKey:@"axis"];
     NSInteger maxLeft = [[self valueForKey:@"maxLeft"] floatValue];
     NSInteger minLeft = [[self valueForKey:@"minLeft"] floatValue];
@@ -199,21 +199,21 @@
     }
 
     LayoutConstraint* layoutProperties = [self.proxy layoutProperties];
-    
+
     if ([self valueForKey:@"axis"] == nil || [[self valueForKey:@"axis"] isEqualToString:@"x"])
     {
         layoutProperties->left = TiDimensionDip(newCenter.x - size.width / 2);
-        
+
         if (ensureRight)
         {
             layoutProperties->right = TiDimensionDip(layoutProperties->left.value * -1);
         }
     }
-    
+
     if ([self valueForKey:@"axis"] == nil || [[self valueForKey:@"axis"] isEqualToString:@"y"])
     {
         layoutProperties->top = TiDimensionDip(newCenter.y - size.height / 2);
-        
+
         if (ensureBottom)
         {
             layoutProperties->bottom = TiDimensionDip(layoutProperties->top.value * -1);
@@ -320,7 +320,7 @@
             {
                 [proxy view].center = proxyCenter;
             }
-            
+
             LayoutConstraint* layoutProperties = [proxy layoutProperties];
 
             if (constraintX)
@@ -332,7 +332,7 @@
             {
                 layoutProperties->top = TiDimensionDip([proxy view].frame.origin.y);
             }
-            
+
             [proxy refreshView:nil];
         }];
     }
