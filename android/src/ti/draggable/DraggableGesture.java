@@ -68,7 +68,7 @@ public class DraggableGesture implements OnTouchListener
 	protected double lastLeft;
 	protected double lastTop;
 	public boolean isBeingDragged = false;
-	
+
 	public DraggableGesture(TiViewProxy proxy, TiUIView view, WeakReference<ConfigProxy> config)
 	{
 		this.proxy = proxy;
@@ -77,33 +77,39 @@ public class DraggableGesture implements OnTouchListener
 		this.threshold = vc.getScaledPagingTouchSlop();
 		this.config = config;
 	}
-	
+
 	public void determineDrag(MotionEvent event)
 	{
 		double xDelta = Math.abs(event.getX() - this.lastX);
 		double yDelta = Math.abs(event.getY() - this.lastY);
-		
+
 		this.isBeingDragged = xDelta > this.threshold || yDelta > this.threshold;
 	}
-	
+
 	@Override
 	public boolean onTouch(View view, MotionEvent event) {
+		ConfigProxy weakConfig = this.config.get();
+
+		if (TiConvert.toBoolean(weakConfig.getProperty("enabled")) == false)
+		{
+			return false;
+		}
+
 		if (! this.isBeingDragged && event.getAction() == MotionEvent.ACTION_MOVE)
 		{
 			this.determineDrag(event);
 		}
-		
+
 		if (! this.isBeingDragged) {
 			return false;
 		}
-		
+
 		float screenX = event.getRawX(),
 			  screenY = event.getRawY();
-		
+
 		View nativeView = this.contentView.getOuterView();
-		ConfigProxy weakConfig = this.config.get();
 		KrollDict configProps = weakConfig.getProperties();
-		
+
 		if (this.velocityTracker != null)
 		{
 			this.velocityTracker.addMovement(event);
@@ -124,10 +130,10 @@ public class DraggableGesture implements OnTouchListener
 					boolean xAxis = ! configProps.isNull("axis") && configProps.getString("axis").equals("x"),
 							yAxis = ! configProps.isNull("axis") && configProps.getString("axis").equals("y"),
 							noAxis = ! xAxis && ! yAxis;
-					
+
 					double leftEdge = screenX + startLeft,
 						   topEdge = screenY + startTop;
-					
+
 					if (xAxis)
 					{
 						topEdge = nativeView.getY();
@@ -136,136 +142,136 @@ public class DraggableGesture implements OnTouchListener
 					{
 						leftEdge = nativeView.getX();
 					}
-					
+
 					if (noAxis || xAxis)
 					{
 						if (! configProps.isNull("minLeft"))
 						{
 							double _minLeft = weakConfig.getDimensionAsPixels("minLeft");
-							
+
 							if (leftEdge <= _minLeft)
 							{
 								leftEdge = _minLeft;
 							}
 						}
-						
+
 						if (! configProps.isNull("maxLeft"))
 						{
 							double _maxLeft = weakConfig.getDimensionAsPixels("maxLeft");
-							
+
 							if (leftEdge >= _maxLeft)
 							{
 								leftEdge = _maxLeft;
 							}
 						}
 					}
-					
+
 					if (noAxis || yAxis)
 					{
 						if (! configProps.isNull("minTop"))
 						{
 							double _minTop = weakConfig.getDimensionAsPixels("minTop");
-							
+
 							if (topEdge <= _minTop)
 							{
 								topEdge = _minTop;
 							}
 						}
-						
+
 						if (! configProps.isNull("maxTop"))
 						{
 							double _maxTop = weakConfig.getDimensionAsPixels("maxTop");
-							
+
 							if (topEdge >= _maxTop)
 							{
 								topEdge = _maxTop;
 							}
 						}
 					}
-					
+
 					moveView(nativeView, leftEdge, topEdge);
-					
+
 					distanceX += Math.abs(lastLeft - leftEdge);
 					distanceY += Math.abs(lastTop - topEdge);
 					lastLeft = leftEdge;
 					lastTop = topEdge;
-					
+
 					if (proxy.hasListeners("move"))
 					{
 						this.velocityTracker.computeCurrentVelocity(1000);
-						
+
 						KrollDict eventDict = new KrollDict();
 						KrollDict velocityDict = new KrollDict();
-						
+
 						velocityDict.put("x", this.velocityTracker.getXVelocity());
 						velocityDict.put("y", this.velocityTracker.getYVelocity());
 						eventDict.put("left", nativeView.getX());
 						eventDict.put("top", nativeView.getY());
 						eventDict.put("velocity", velocityDict);
-						
+
 						proxy.fireEvent("move", eventDict);
 					}
 				}
 				break;
 		}
-		
+
 		return true;
 	}
-	
+
 	public void startDrag(MotionEvent event)
 	{
 		this.lastX = event.getX();
 		this.lastY = event.getY();
-		
+
 		View nativeView = this.contentView.getOuterView();
-		
+
 		float screenX = event.getRawX(),
 			  screenY = event.getRawY();
-		
+
 		this.startLeft = nativeView.getX() - screenX;
 		this.startTop = nativeView.getY() - screenY;
 		this.lastLeft = nativeView.getX();
 		this.lastTop = nativeView.getY();
 		this.distanceX = this.distanceY = 0;
-		
+
 		if (this.velocityTracker == null)
 		{
 			this.velocityTracker = VelocityTracker.obtain();
 		}
-		
+
 		if (proxy.hasListeners("start"))
 		{
 			this.velocityTracker.computeCurrentVelocity(1000);
-			
+
 			KrollDict eventDict = new KrollDict();
 			KrollDict velocityDict = new KrollDict();
-			
+
 			velocityDict.put("x", this.velocityTracker.getXVelocity());
 			velocityDict.put("y", this.velocityTracker.getYVelocity());
 			eventDict.put("left", nativeView.getX());
 			eventDict.put("top", nativeView.getY());
 			eventDict.put("velocity", velocityDict);
-			
+
 			proxy.fireEvent("start", eventDict);
 		}
 	}
-	
+
 	public void stopDrag(MotionEvent event)
 	{
 		if (this.isBeingDragged)
 		{
 			this.isBeingDragged = false;
-			
+
 			if (proxy.hasListeners("end") || proxy.hasListeners("cancel"))
 			{
 				View nativeView = this.contentView.getOuterView();
-				
+
 				this.velocityTracker.computeCurrentVelocity(1000);
-				
+
 				KrollDict eventDict = new KrollDict();
 				KrollDict velocityDict = new KrollDict();
 				KrollDict distanceDict = new KrollDict();
-				
+
 				distanceDict.put("x", distanceX);
 				distanceDict.put("y", distanceY);
 				velocityDict.put("x", this.velocityTracker.getXVelocity());
@@ -274,36 +280,36 @@ public class DraggableGesture implements OnTouchListener
 				eventDict.put("top", nativeView.getY());
 				eventDict.put("velocity", velocityDict);
 				eventDict.put("distance", distanceDict);
-				
+
 				proxy.fireEvent(event.getAction() == MotionEvent.ACTION_UP ? "end" : "cancel", eventDict);
 			}
-			
+
 			this.velocityTracker.clear();
 		}
 	}
-	
+
 	protected void moveView(View view, double left, double top)
 	{
 		double translationLeft = lastLeft - left,
 			   translationTop = lastTop - top;
-		
+
 		translateMappedProxies(translationLeft, translationTop);
-		
+
 		view.setX((float) left);
 		view.setY((float) top);
 		view.invalidate();
-		
+
 		proxy.setProperty("left", new Double(left));
 		proxy.setProperty("top", new Double(top));
 	}
-	
+
 	protected void translateMappedProxies(double translationLeft, double translationTop)
 	{
 		View nativeView = this.contentView.getOuterView();
 		ConfigProxy weakConfig = this.config.get();
 		KrollDict configProps = weakConfig.getProperties();
 		Object[] maps = (Object[]) configProps.get("maps");
-		
+
 		if (maps != null)
 		{
 			for (int i = 0; i < maps.length; i++)
@@ -312,48 +318,48 @@ public class DraggableGesture implements OnTouchListener
 				KrollDict map = new KrollDict((Map<? extends String, ? extends Object>) maps[i]);
 				TiViewProxy mappedProxy = (TiViewProxy) map.get("view");
 				View mappedView = mappedProxy.peekView().getOuterView();
-				
+
 				double parallaxAmount = map.optInt("parallaxAmount", 1),
 					   newTop = mappedView.getY(),
 					   newLeft = mappedView.getX();
-				
+
 				boolean shouldInvalidate = false;
-				
+
 				if (map.containsKeyAndNotNull("constrain"))
 				{
 					KrollDict constraints = map.getKrollDict("constrain");
 					KrollDict xConstraint = constraints.getKrollDict("x");
 					KrollDict yConstraint = constraints.getKrollDict("y");
 					String constraintAxis = constraints.getString("axis");
-					
+
 					if (xConstraint != null || (constraintAxis != null && constraintAxis.equals("x")))
 					{
 						shouldInvalidate = true;
-						
+
 						Integer parentWidth = nativeView.getWidth(),
 								xStart = xConstraint.getInt("start"),
 								xEnd = xConstraint.getInt("end"),
 								parentMinLeft = weakConfig.getDimensionAsPixels("minLeft"),
 								parentMaxLeft = weakConfig.getDimensionAsPixels("maxLeft");
-						
+
 						double proxyWidth = mappedView.getWidth(),
 							   xStartParallax = xStart / parallaxAmount,
 							   xRatio = proxyWidth / (parentWidth.doubleValue() / 2),
 							   xDistance = parentMaxLeft.doubleValue() - parentMinLeft.doubleValue(),
 							   xWidth = proxyWidth / parallaxAmount;
-						
+
 						if (xStart != null || xEnd != null)
 						{
 							xWidth = Math.abs(xStartParallax) + Math.abs(xEnd.doubleValue());
 						}
-						
+
 						if (parentMinLeft != null || parentMaxLeft != null)
 						{
 							xRatio = xDistance == 0 ? 1 : xWidth / xDistance;
 						}
-						
+
 						newLeft -= translationLeft * xRatio;
-						
+
 						if (newLeft < xStartParallax)
 						{
 							newLeft = xStartParallax;
@@ -368,35 +374,35 @@ public class DraggableGesture implements OnTouchListener
 						shouldInvalidate = true;
 						newLeft -= translationLeft / parallaxAmount;
 					}
-					
+
 					if (yConstraint != null || (constraintAxis != null && constraintAxis.equals("y")))
 					{
 						shouldInvalidate = true;
-								
+
 						Integer parentHeight = nativeView.getHeight(),
 								yStart = yConstraint.getInt("start"),
 								yEnd = yConstraint.getInt("end"),
 								parentMinTop = weakConfig.getDimensionAsPixels("minTop"),
 								parentMaxTop = weakConfig.getDimensionAsPixels("maxTop");
-						
+
 						double proxyHeight = mappedView.getHeight(),
 							   yStartParallax = yStart / parallaxAmount,
 							   yRatio = proxyHeight / (parentHeight.doubleValue() / 2),
 							   yDistance = parentMaxTop.doubleValue() - parentMinTop.doubleValue(),
 							   yHeight = proxyHeight / parallaxAmount;
-						
+
 						if (yStart != null || yEnd != null)
 						{
 							yHeight = Math.abs(yStartParallax) + Math.abs(yEnd.doubleValue());
 						}
-						
+
 						if (parentMinTop != null || parentMaxTop != null)
 						{
 							yRatio = yDistance == 0 ? 1 : yHeight / yDistance;
 						}
-						
+
 						newTop -= translationTop * yRatio;
-						
+
 						if (newTop < yStartParallax)
 						{
 							newTop = yStartParallax;
@@ -418,26 +424,26 @@ public class DraggableGesture implements OnTouchListener
 					newLeft -= translationLeft / parallaxAmount;
 					newTop -= translationTop / parallaxAmount;
 				}
-				
+
 				if (shouldInvalidate)
 				{
 					mappedView.setX((float) newLeft);
 					mappedView.setY((float) newTop);
-					
+
 					mappedProxy.setProperty("left", new Double(newLeft));
 					mappedProxy.setProperty("top", new Double(newTop));
-					
+
 					mappedView.invalidate();
 				}
 			}
 		}
 	}
-	
+
 	protected void prepareMappedProxies(ConfigProxy configProxy)
 	{
 		KrollDict configProps = configProxy.getProperties();
 		Object[] maps = (Object[]) configProps.get("maps");
-		
+
 		if (maps != null)
 		{
 			for (int i = 0; i < maps.length; i++)
@@ -446,21 +452,21 @@ public class DraggableGesture implements OnTouchListener
 				KrollDict map = new KrollDict((Map<? extends String, ? extends Object>) maps[i]);
 				TiViewProxy mappedProxy = (TiViewProxy) map.get("view");
 				View mappedView = mappedProxy.peekView().getOuterView();
-				
+
 				if (map.containsKeyAndNotNull("constrain"))
 				{
 					KrollDict constraints = map.getKrollDict("constrain");
 					KrollDict constraintX = constraints.getKrollDict("x");
 					KrollDict constraintY = constraints.getKrollDict("y");
-					
+
 					double proxyWidth = mappedView.getWidth(),
 						   proxyHeight = mappedView.getHeight(),
 						   parallaxAmount = map.optInt("parallaxAmount", 1),
 						   newLeft = 0,
 						   newTop = 0;
-					
+
 					boolean didModifyPosition = false;
-					
+
 					if (constraintX != null)
 					{
 						if (constraintX.containsKeyAndNotNull("start"))
@@ -470,7 +476,7 @@ public class DraggableGesture implements OnTouchListener
 							newLeft += proxyWidth;
 						}
 					}
-					
+
 					if (constraintY != null)
 					{
 						if (constraintY.containsKeyAndNotNull("start"))
@@ -480,7 +486,7 @@ public class DraggableGesture implements OnTouchListener
 							newTop += proxyHeight;
 						}
 					}
-					
+
 					if (didModifyPosition)
 					{
 						TiCompositeLayout.LayoutParams mappedLayout = (TiCompositeLayout.LayoutParams) mappedView.getLayoutParams();

@@ -1,3 +1,38 @@
+/**
+ * An enhanced fork of the original TiDraggable module by Pedro Enrique,
+ * allows for simple creation of "draggable" views.
+ *
+ * Copyright (C) 2013 Seth Benjamin
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * -- Original License --
+ *
+ * Copyright 2012 Pedro Enrique
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package ti.draggable;
 
 import java.lang.ref.WeakReference;
@@ -19,21 +54,22 @@ public class ConfigProxy extends KrollProxy implements KrollProxyListener
 {
 	protected KrollDict dimensions = new KrollDict();
 	protected WeakReference<DraggableImpl> draggableImpl;
-	
+
 	public ConfigProxy(KrollDict config)
 	{
 		super();
-		
+
 		Object[] maps = null;
 
 		if (config != null)
-		{			
+		{
 			if (config.containsKeyAndNotNull("maps"))
 			{
 				maps = (Object[]) config.get("maps");
 			}
 		}
-		
+
+		properties.put("enabled", TiConvert.toBoolean(config, "enabled", true));
 		properties.put("ensureRight", TiConvert.toBoolean(config, "ensureRight", false));
 		properties.put("ensureBottom", TiConvert.toBoolean(config, "ensureBottom", false));
 		properties.put("minLeft", config.containsKeyAndNotNull("minLeft") ? TiConvert.toDouble(config, "minLeft") : null);
@@ -47,34 +83,34 @@ public class ConfigProxy extends KrollProxy implements KrollProxyListener
 		dimensions.put("maxLeft", config.containsKeyAndNotNull("minLeft") ? TiConvert.toTiDimension(config, "maxLeft", TiDimension.TYPE_LEFT) : null);
 		dimensions.put("minTop", config.containsKeyAndNotNull("minTop") ? TiConvert.toTiDimension(config, "minTop", TiDimension.TYPE_TOP) : null);
 		dimensions.put("maxTop", config.containsKeyAndNotNull("maxTop") ? TiConvert.toTiDimension(config, "maxTop", TiDimension.TYPE_TOP) : null);
-		
+
 		setModelListener(this);
 	}
-	
+
 	public Integer getDimensionAsPixels(String key)
 	{
 		TiDimension dimension = (TiDimension) dimensions.get(key);
-		
+
 		if (dimension != null)
 		{
 			View decorView = TiApplication.getAppCurrentActivity().getWindow().getDecorView();
-			
+
 			return dimension.getAsPixels(decorView);
 		}
-		
+
 		return null;
 	}
-	
+
 	public void setDraggableImpl(WeakReference<DraggableImpl> draggableView)
 	{
-		draggableImpl = draggableView; 
+		draggableImpl = draggableView;
 	}
-	
+
 	public DraggableImpl getDraggableImpl()
 	{
 		return draggableImpl != null ? draggableImpl.get() : null;
 	}
-	
+
 	@Kroll.method
 	public void setConfig(Object[] args)
 	{
@@ -113,12 +149,12 @@ public class ConfigProxy extends KrollProxy implements KrollProxyListener
 	}
 
 	@Override
-	public void propertyChanged(String key, Object oldValue, Object newValue, KrollProxy proxy) 
+	public void propertyChanged(String key, Object oldValue, Object newValue, KrollProxy proxy)
 	{
 		if (key.equals("maps"))
 		{
 			DraggableImpl impl = getDraggableImpl();
-			
+
 			if (impl != null)
 			{
 				getDraggableImpl().listener.prepareMappedProxies(this);
