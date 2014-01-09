@@ -34,6 +34,9 @@
  * limitations under the License.
  */
 
+#import <objc/runtime.h>
+#import <objc/message.h>
+#import "TiViewProxy+ViewProxyExtended.h"
 #import "TiDraggableGesture.h"
 
 @implementation TiDraggableGesture
@@ -333,7 +336,7 @@
                 layoutProperties->top = TiDimensionDip([proxy view].frame.origin.y);
             }
 
-            [proxy refreshView:nil];
+            [proxy respositionEx];
         }];
     }
 }
@@ -595,8 +598,8 @@
             {
                 layoutProperties->right = TiDimensionDip(layoutProperties->left.value * -1);
             }
-
-            [proxy refreshView:nil];
+            
+            [proxy respositionEx];
         }];
     }
 }

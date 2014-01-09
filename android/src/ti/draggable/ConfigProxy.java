@@ -62,10 +62,6 @@ public class ConfigProxy extends KrollProxy implements KrollProxyListener
 		properties.put("enabled", config != null && config.containsKeyAndNotNull("enabled") ? TiConvert.toBoolean(config, "enabled", true) : true);
 		properties.put("ensureRight", config != null && config.containsKeyAndNotNull("ensureRight") ? TiConvert.toBoolean(config, "ensureRight", false) : false);
 		properties.put("ensureBottom", config != null && config.containsKeyAndNotNull("ensureBottom") ? TiConvert.toBoolean(config, "ensureBottom", false) : false);
-		properties.put("minLeft", config != null && config.containsKeyAndNotNull("minLeft") ? TiConvert.toDouble(config, "minLeft") : null);
-		properties.put("maxLeft", config != null && config.containsKeyAndNotNull("minLeft") ? TiConvert.toDouble(config, "maxLeft") : null);
-		properties.put("minTop",config != null &&  config.containsKeyAndNotNull("minTop") ? TiConvert.toDouble(config, "minTop") : null);
-		properties.put("maxTop", config != null && config.containsKeyAndNotNull("maxTop") ? TiConvert.toDouble(config, "maxTop") : null);
 		properties.put("axis", config != null && config.containsKeyAndNotNull("axis") ? TiConvert.toString(config, "axis") : null);
 		properties.put("maps", config != null && config.containsKeyAndNotNull("maps") ? (Object[]) config.get("maps") : null);
 

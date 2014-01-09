@@ -81,7 +81,7 @@
     else
     {
         Ivar nameLookupIvar = class_getInstanceVariable([super class], "classNameLookup");
-        CFMutableDictionaryRef cnLookup = (CFMutableDictionaryRef)object_getIvar(self, nameLookupIvar);
+        CFMutableDictionaryRef cnLookup = (CFMutableDictionaryRef) object_getIvar(self, nameLookupIvar);
         Class resultClass = (Class) CFDictionaryGetValue(cnLookup, name);
 
         if (resultClass == NULL)
