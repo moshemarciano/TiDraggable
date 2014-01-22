@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="src" path="build/.apt_generated"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/Android/platforms/android-14/android.jar"/>
 	<classpathentry kind="lib" path="/Android/add-ons/addon_google_apis_google_inc_10/libs/maps.jar"/>
