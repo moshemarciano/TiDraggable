@@ -295,9 +295,12 @@ public class DraggableGesture implements OnTouchListener
 
 		translateMappedProxies(translationLeft, translationTop);
 
-		view.setX((float) left);
-		view.setY((float) top);
-		view.invalidate();
+		TiCompositeLayout.LayoutParams mappedLayout = (TiCompositeLayout.LayoutParams) view.getLayoutParams();
+		
+		mappedLayout.optionLeft = new TiDimension(left, TiDimension.TYPE_LEFT);
+		mappedLayout.optionTop = new TiDimension(top, TiDimension.TYPE_TOP);
+
+		view.setLayoutParams(mappedLayout);
 
 		proxy.setProperty("left", new Double(left));
 		proxy.setProperty("top", new Double(top));
