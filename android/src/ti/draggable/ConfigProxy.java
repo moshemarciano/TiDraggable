@@ -78,7 +78,7 @@ public class ConfigProxy extends KrollProxy implements KrollProxyListener
 		if (props.containsKeyAndNotNull(key) && props.get(key) instanceof TiDimension)
 		{
 			TiDimension dimension = (TiDimension) props.get(key);
-			View decorView = TiApplication.getAppCurrentActivity().getWindow().getDecorView();
+			View decorView = this.getDecorView();
 
 			return dimension.getAsPixels(decorView);
 		}
@@ -153,5 +153,10 @@ public class ConfigProxy extends KrollProxy implements KrollProxyListener
 		{
 			properties.put(key, TiConvert.toTiDimension(TiConvert.toString(newValue), TiDimension.TYPE_TOP));
 		}
+	}
+	
+	public View getDecorView()
+	{
+		return TiApplication.getAppCurrentActivity().getWindow().getDecorView();
 	}
 }
