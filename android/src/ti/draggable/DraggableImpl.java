@@ -114,8 +114,6 @@ public class DraggableImpl extends TiUIView {
 
 		this.getOuterView().setOnTouchListener(listener);
 
-		this.listener.prepareMappedProxies();
-
 		draggableConfig.setDraggableImpl(new WeakReference<DraggableImpl>(this));
 	}
 
