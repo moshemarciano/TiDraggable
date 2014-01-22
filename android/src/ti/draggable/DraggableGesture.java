@@ -325,6 +325,7 @@ public class DraggableGesture implements OnTouchListener
 
 				if (map.containsKeyAndNotNull("constrain"))
 				{
+					View parentView = this.getConfig().getDecorView();
 					KrollDict constraints = map.getKrollDict("constrain");
 					KrollDict constraintX = constraints.getKrollDict("x");
 					KrollDict constraintY = constraints.getKrollDict("y");
@@ -337,11 +338,11 @@ public class DraggableGesture implements OnTouchListener
 
 					if (constraintX != null && constraintX.containsKeyAndNotNull("start"))
 					{
-						double xStart = TiConvert.toDouble(constraintX, "start");
+						double xStart = TiConvert.toTiDimension(constraintX, "start", TiDimension.TYPE_LEFT).getAsPixels(parentView);
 						
 						if (constraintX.containsKeyAndNotNull("end"))
 						{
-							double xEnd = TiConvert.toDouble(constraintX, "end");
+							double xEnd = TiConvert.toTiDimension(constraintX, "end", TiDimension.TYPE_LEFT).getAsPixels(parentView);
 							
 							newLeft = xStart / parallaxAmount - xEnd;
 						}
@@ -355,11 +356,11 @@ public class DraggableGesture implements OnTouchListener
 
 					if (constraintY != null && constraintY.containsKeyAndNotNull("start"))
 					{
-						double yStart = TiConvert.toDouble(constraintX, "start");
+						double yStart = TiConvert.toTiDimension(constraintX, "start", TiDimension.TYPE_TOP).getAsPixels(parentView);
 						
 						if (constraintY.containsKeyAndNotNull("end"))
 						{
-							double yEnd = TiConvert.toDouble(constraintX, "end");
+							double yEnd = TiConvert.toTiDimension(constraintX, "end", TiDimension.TYPE_TOP).getAsPixels(parentView);
 							
 							newTop = yStart / parallaxAmount - yEnd;
 						}
