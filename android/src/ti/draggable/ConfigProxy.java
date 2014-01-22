@@ -52,7 +52,6 @@ import android.view.View;
 @Kroll.proxy
 public class ConfigProxy extends KrollProxy implements KrollProxyListener
 {
-	protected KrollDict dimensions = new KrollDict();
 	protected WeakReference<DraggableImpl> draggableImpl;
 
 	public ConfigProxy(KrollDict config)
@@ -64,22 +63,22 @@ public class ConfigProxy extends KrollProxy implements KrollProxyListener
 		properties.put("ensureBottom", config != null && config.containsKeyAndNotNull("ensureBottom") ? TiConvert.toBoolean(config, "ensureBottom", false) : false);
 		properties.put("axis", config != null && config.containsKeyAndNotNull("axis") ? TiConvert.toString(config, "axis") : null);
 		properties.put("maps", config != null && config.containsKeyAndNotNull("maps") ? (Object[]) config.get("maps") : null);
-
-		dimensions.put("minLeft", config != null && config.containsKeyAndNotNull("minLeft") ? TiConvert.toTiDimension(config, "minLeft", TiDimension.TYPE_LEFT) : null);
-		dimensions.put("maxLeft", config != null && config.containsKeyAndNotNull("minLeft") ? TiConvert.toTiDimension(config, "maxLeft", TiDimension.TYPE_LEFT) : null);
-		dimensions.put("minTop", config != null && config.containsKeyAndNotNull("minTop") ? TiConvert.toTiDimension(config, "minTop", TiDimension.TYPE_TOP) : null);
-		dimensions.put("maxTop", config != null && config.containsKeyAndNotNull("maxTop") ? TiConvert.toTiDimension(config, "maxTop", TiDimension.TYPE_TOP) : null);
+		properties.put("minLeft", config != null && config.containsKeyAndNotNull("minLeft") ? TiConvert.toTiDimension(config, "minLeft", TiDimension.TYPE_LEFT) : null);
+		properties.put("maxLeft", config != null && config.containsKeyAndNotNull("minLeft") ? TiConvert.toTiDimension(config, "maxLeft", TiDimension.TYPE_LEFT) : null);
+		properties.put("minTop", config != null && config.containsKeyAndNotNull("minTop") ? TiConvert.toTiDimension(config, "minTop", TiDimension.TYPE_TOP) : null);
+		properties.put("maxTop", config != null && config.containsKeyAndNotNull("maxTop") ? TiConvert.toTiDimension(config, "maxTop", TiDimension.TYPE_TOP) : null);
 
 		setModelListener(this);
 	}
 
 	public Integer getDimensionAsPixels(String key)
 	{
-		TiDimension dimension = (TiDimension) dimensions.get(key);
-
-		if (dimension != null)
+		KrollDict props = this.getProperties();
+		
+		if (props.containsKeyAndNotNull(key) && props.get(key) instanceof TiDimension)
 		{
-			View decorView = TiApplication.getAppCurrentActivity().getWindow().getDecorView();
+			TiDimension dimension = (TiDimension) props.get(key);
+			View decorView = this.getDecorView();
 
 			return dimension.getAsPixels(decorView);
 		}
@@ -143,16 +142,21 @@ public class ConfigProxy extends KrollProxy implements KrollProxyListener
 
 			if (impl != null)
 			{
-				getDraggableImpl().listener.prepareMappedProxies(this);
+				getDraggableImpl().listener.prepareMappedProxies();
 			}
 		}
 		else if (key.equals("minLeft") || key.equals("maxLeft"))
 		{
-			dimensions.put(key, TiConvert.toTiDimension(TiConvert.toString(newValue), TiDimension.TYPE_LEFT));
+			properties.put(key, TiConvert.toTiDimension(TiConvert.toString(newValue), TiDimension.TYPE_LEFT));
 		}
 		else if (key.equals("minTop") || key.equals("maxTop"))
 		{
-			dimensions.put(key, TiConvert.toTiDimension(TiConvert.toString(newValue), TiDimension.TYPE_TOP));
+			properties.put(key, TiConvert.toTiDimension(TiConvert.toString(newValue), TiDimension.TYPE_TOP));
 		}
+	}
+	
+	public View getDecorView()
+	{
+		return TiApplication.getAppCurrentActivity().getWindow().getDecorView();
 	}
 }

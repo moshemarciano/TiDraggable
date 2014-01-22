@@ -112,9 +112,7 @@ public class DraggableImpl extends TiUIView {
         this.getLayoutParams().autoFillsWidth = true;
         this.listener = new DraggableGesture((TiViewProxy) proxy, this, weakConfig);
 
-		getOuterView().setOnTouchListener(listener);
-
-		listener.prepareMappedProxies(weakConfig.get());
+		this.getOuterView().setOnTouchListener(listener);
 
 		draggableConfig.setDraggableImpl(new WeakReference<DraggableImpl>(this));
 	}

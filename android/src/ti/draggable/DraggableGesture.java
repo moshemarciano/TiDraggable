@@ -36,9 +36,10 @@
 package ti.draggable;
 
 import java.lang.ref.WeakReference;
-import java.util.Map;
+import java.util.HashMap;
 
 import org.appcelerator.kroll.KrollDict;
+import org.appcelerator.kroll.KrollProxy;
 import org.appcelerator.titanium.TiDimension;
 import org.appcelerator.titanium.proxy.TiViewProxy;
 import org.appcelerator.titanium.util.TiConvert;
@@ -53,8 +54,8 @@ import android.view.ViewConfiguration;
 
 public class DraggableGesture implements OnTouchListener
 {
-	protected TiUIView contentView;
-	protected TiViewProxy proxy;
+	protected TiUIView draggableView;
+	protected TiViewProxy draggableProxy;
 	protected WeakReference<ConfigProxy> config;
 	protected VelocityTracker velocityTracker;
 	protected ViewConfiguration vc;
@@ -71,26 +72,28 @@ public class DraggableGesture implements OnTouchListener
 
 	public DraggableGesture(TiViewProxy proxy, TiUIView view, WeakReference<ConfigProxy> config)
 	{
-		this.proxy = proxy;
-		this.contentView = view;
-		this.vc = ViewConfiguration.get(this.contentView.getOuterView().getContext());
+		this.draggableProxy = proxy;
+		this.draggableView = view;
+		this.vc = ViewConfiguration.get(this.draggableView.getOuterView().getContext());
 		this.threshold = vc.getScaledPagingTouchSlop();
 		this.config = config;
+		
+		this.prepareMappedProxies();
 	}
 
 	public void determineDrag(MotionEvent event)
 	{
-		double xDelta = Math.abs(event.getX() - this.lastX);
-		double yDelta = Math.abs(event.getY() - this.lastY);
+		double xDelta = Math.abs(event.getRawX() - this.lastX);
+		double yDelta = Math.abs(event.getRawY() - this.lastY);
 
 		this.isBeingDragged = xDelta > this.threshold || yDelta > this.threshold;
 	}
 
 	@Override
 	public boolean onTouch(View view, MotionEvent event) {
-		ConfigProxy weakConfig = this.config.get();
-
-		if (TiConvert.toBoolean(weakConfig.getProperty("enabled")) == false)
+		ConfigProxy config = this.getConfig();
+		
+		if (TiConvert.toBoolean(config.getProperty("enabled")) == false)
 		{
 			return false;
 		}
@@ -103,12 +106,6 @@ public class DraggableGesture implements OnTouchListener
 		if (! this.isBeingDragged) {
 			return false;
 		}
-
-		float screenX = event.getRawX(),
-			  screenY = event.getRawY();
-
-		View nativeView = this.contentView.getOuterView();
-		KrollDict configProps = weakConfig.getProperties();
 
 		if (this.velocityTracker != null)
 		{
@@ -125,113 +122,130 @@ public class DraggableGesture implements OnTouchListener
 				this.stopDrag(event);
 				break;
 			case MotionEvent.ACTION_MOVE:
-				if (this.isBeingDragged)
-				{
-					boolean xAxis = ! configProps.isNull("axis") && configProps.getString("axis").equals("x"),
-							yAxis = ! configProps.isNull("axis") && configProps.getString("axis").equals("y"),
-							noAxis = ! xAxis && ! yAxis;
-
-					double leftEdge = screenX + startLeft,
-						   topEdge = screenY + startTop;
-
-					if (xAxis)
-					{
-						topEdge = nativeView.getY();
-					}
-					else if (yAxis)
-					{
-						leftEdge = nativeView.getX();
-					}
-
-					if (noAxis || xAxis)
-					{
-						if (! configProps.isNull("minLeft"))
-						{
-							double _minLeft = weakConfig.getDimensionAsPixels("minLeft");
-
-							if (leftEdge <= _minLeft)
-							{
-								leftEdge = _minLeft;
-							}
-						}
-
-						if (! configProps.isNull("maxLeft"))
-						{
-							double _maxLeft = weakConfig.getDimensionAsPixels("maxLeft");
-
-							if (leftEdge >= _maxLeft)
-							{
-								leftEdge = _maxLeft;
-							}
-						}
-					}
-
-					if (noAxis || yAxis)
-					{
-						if (! configProps.isNull("minTop"))
-						{
-							double _minTop = weakConfig.getDimensionAsPixels("minTop");
-
-							if (topEdge <= _minTop)
-							{
-								topEdge = _minTop;
-							}
-						}
-
-						if (! configProps.isNull("maxTop"))
-						{
-							double _maxTop = weakConfig.getDimensionAsPixels("maxTop");
-
-							if (topEdge >= _maxTop)
-							{
-								topEdge = _maxTop;
-							}
-						}
-					}
-
-					moveView(nativeView, leftEdge, topEdge);
-
-					distanceX += Math.abs(lastLeft - leftEdge);
-					distanceY += Math.abs(lastTop - topEdge);
-					lastLeft = leftEdge;
-					lastTop = topEdge;
-
-					if (proxy.hasListeners("move"))
-					{
-						this.velocityTracker.computeCurrentVelocity(1000);
-
-						KrollDict eventDict = new KrollDict();
-						KrollDict velocityDict = new KrollDict();
-
-						velocityDict.put("x", this.velocityTracker.getXVelocity());
-						velocityDict.put("y", this.velocityTracker.getYVelocity());
-						eventDict.put("left", nativeView.getX());
-						eventDict.put("top", nativeView.getY());
-						eventDict.put("velocity", velocityDict);
-
-						proxy.fireEvent("move", eventDict);
-					}
-				}
+				this.drag(event);
 				break;
 		}
 
 		return true;
 	}
+	
+	public void drag(MotionEvent event)
+	{
+		ConfigProxy config = this.getConfig();
+		KrollDict configProps = config.getProperties();
+		View viewToDrag = this.draggableView.getOuterView();
+		
+		float screenX = event.getRawX();
+		float screenY = event.getRawY();
+		
+		if (this.isBeingDragged)
+		{
+			boolean xAxis = ! configProps.isNull("axis") && configProps.getString("axis").equals("x");
+			boolean yAxis = ! configProps.isNull("axis") && configProps.getString("axis").equals("y");
+			boolean noAxis = ! xAxis && ! yAxis;
+
+			double leftEdge = screenX + startLeft;
+			double topEdge = screenY + startTop;
+
+			if (xAxis)
+			{
+				topEdge = viewToDrag.getTop();
+			}
+			else if (yAxis)
+			{
+				leftEdge = viewToDrag.getLeft();
+			}
+
+			if (noAxis || xAxis)
+			{
+				if (! configProps.isNull("minLeft"))
+				{
+					double _minLeft = config.getDimensionAsPixels("minLeft");
+
+					if (leftEdge <= _minLeft)
+					{
+						leftEdge = _minLeft;
+					}
+				}
+
+				if (! configProps.isNull("maxLeft"))
+				{
+					double _maxLeft = config.getDimensionAsPixels("maxLeft");
+
+					if (leftEdge >= _maxLeft)
+					{
+						leftEdge = _maxLeft;
+					}
+				}
+			}
+
+			if (noAxis || yAxis)
+			{
+				if (! configProps.isNull("minTop"))
+				{
+					double _minTop = config.getDimensionAsPixels("minTop");
+
+					if (topEdge <= _minTop)
+					{
+						topEdge = _minTop;
+					}
+				}
+
+				if (! configProps.isNull("maxTop"))
+				{
+					double _maxTop = config.getDimensionAsPixels("maxTop");
+
+					if (topEdge >= _maxTop)
+					{
+						topEdge = _maxTop;
+					}
+				}
+			}
+			
+			double translationLeft = lastLeft - leftEdge;
+			double translationTop = lastTop - topEdge;
+
+			translateMappedProxies(translationLeft, translationTop);
+
+			this.setViewPosition(draggableProxy, viewToDrag, leftEdge, topEdge);
+
+			distanceX += Math.abs(lastLeft - leftEdge);
+			distanceY += Math.abs(lastTop - topEdge);
+			lastLeft = leftEdge;
+			lastTop = topEdge;
+
+			if (draggableProxy.hasListeners("move"))
+			{
+				this.velocityTracker.computeCurrentVelocity(1000);
+
+				KrollDict eventDict = new KrollDict();
+				KrollDict velocityDict = new KrollDict();
+
+				velocityDict.put("x", this.velocityTracker.getXVelocity());
+				velocityDict.put("y", this.velocityTracker.getYVelocity());
+				eventDict.put("left", viewToDrag.getLeft());
+				eventDict.put("top", viewToDrag.getTop());
+				eventDict.put("velocity", velocityDict);
+
+				draggableProxy.fireEvent("move", eventDict);
+			}
+		}
+	}
 
 	public void startDrag(MotionEvent event)
 	{
-		this.lastX = event.getX();
-		this.lastY = event.getY();
+		View viewToDrag = this.draggableView.getOuterView();
+		
+		this.lastX = event.getRawX();
+		this.lastY = event.getRawY();
 
-		View nativeView = this.contentView.getOuterView();
+		float screenX = event.getRawX();
+		float screenY = event.getRawY();
 
-		float screenX = event.getRawX(),
-			  screenY = event.getRawY();
-
-		this.startLeft = nativeView.getX() - screenX;
-		this.startTop = nativeView.getY() - screenY;
-		this.lastLeft = nativeView.getX();
-		this.lastTop = nativeView.getY();
+		this.startLeft = viewToDrag.getLeft() - screenX;
+		this.startTop = viewToDrag.getTop() - screenY;
+		this.lastLeft = viewToDrag.getLeft();
+		this.lastTop = viewToDrag.getTop();
 		this.distanceX = this.distanceY = 0;
 
 		if (this.velocityTracker == null)
@@ -239,20 +253,22 @@ public class DraggableGesture implements OnTouchListener
 			this.velocityTracker = VelocityTracker.obtain();
 		}
 
-		if (proxy.hasListeners("start"))
+		if (draggableProxy.hasListeners("start"))
 		{
 			this.velocityTracker.computeCurrentVelocity(1000);
 
-			KrollDict eventDict = new KrollDict();
 			KrollDict velocityDict = new KrollDict();
-
+			
 			velocityDict.put("x", this.velocityTracker.getXVelocity());
 			velocityDict.put("y", this.velocityTracker.getYVelocity());
-			eventDict.put("left", nativeView.getX());
-			eventDict.put("top", nativeView.getY());
+			
+			KrollDict eventDict = new KrollDict();
+			
+			eventDict.put("left", viewToDrag.getLeft());
+			eventDict.put("top", viewToDrag.getTop());
 			eventDict.put("velocity", velocityDict);
 
-			proxy.fireEvent("start", eventDict);
+			draggableProxy.fireEvent("start", eventDict);
 		}
 	}
 
@@ -261,242 +277,168 @@ public class DraggableGesture implements OnTouchListener
 		if (this.isBeingDragged)
 		{
 			this.isBeingDragged = false;
+			
+			this.finalizeMappedTranslations();
 
-			if (proxy.hasListeners("end") || proxy.hasListeners("cancel"))
+			if (draggableProxy.hasListeners("end") || draggableProxy.hasListeners("cancel"))
 			{
-				View nativeView = this.contentView.getOuterView();
+				View viewToDrag = this.draggableView.getOuterView();
 
 				this.velocityTracker.computeCurrentVelocity(1000);
-
-				KrollDict eventDict = new KrollDict();
-				KrollDict velocityDict = new KrollDict();
+				
 				KrollDict distanceDict = new KrollDict();
-
+				
 				distanceDict.put("x", distanceX);
 				distanceDict.put("y", distanceY);
+				
+				KrollDict velocityDict = new KrollDict();
+				
 				velocityDict.put("x", this.velocityTracker.getXVelocity());
 				velocityDict.put("y", this.velocityTracker.getYVelocity());
-				eventDict.put("left", nativeView.getX());
-				eventDict.put("top", nativeView.getY());
+				
+				KrollDict eventDict = new KrollDict();
+				
+				eventDict.put("left", viewToDrag.getLeft());
+				eventDict.put("top", viewToDrag.getTop());
 				eventDict.put("velocity", velocityDict);
 				eventDict.put("distance", distanceDict);
 
-				proxy.fireEvent(event.getAction() == MotionEvent.ACTION_UP ? "end" : "cancel", eventDict);
+				draggableProxy.fireEvent(event.getAction() == MotionEvent.ACTION_UP ? "end" : "cancel", eventDict);
 			}
 
 			this.velocityTracker.clear();
 		}
 	}
 
-	protected void moveView(View view, double left, double top)
+	protected void prepareMappedProxies()
 	{
-		double translationLeft = lastLeft - left,
-			   translationTop = lastTop - top;
+		KrollDict configProps = this.getConfig().getProperties();
 
-		translateMappedProxies(translationLeft, translationTop);
-
-		view.setX((float) left);
-		view.setY((float) top);
-		view.invalidate();
-
-		proxy.setProperty("left", new Double(left));
-		proxy.setProperty("top", new Double(top));
-	}
-
-	protected void translateMappedProxies(double translationLeft, double translationTop)
-	{
-		View nativeView = this.contentView.getOuterView();
-		ConfigProxy weakConfig = this.config.get();
-		KrollDict configProps = weakConfig.getProperties();
-		Object[] maps = (Object[]) configProps.get("maps");
-
-		if (maps != null)
+		if (configProps.containsKeyAndNotNull("maps"))
 		{
-			for (int i = 0; i < maps.length; i++)
+			for (Object mapObject : (Object[]) configProps.get("maps"))
 			{
-				@SuppressWarnings("unchecked")
-				KrollDict map = new KrollDict((Map<? extends String, ? extends Object>) maps[i]);
-				TiViewProxy mappedProxy = (TiViewProxy) map.get("view");
-				View mappedView = mappedProxy.peekView().getOuterView();
-
-				double parallaxAmount = map.optInt("parallaxAmount", 1),
-					   newTop = mappedView.getY(),
-					   newLeft = mappedView.getX();
-
-				boolean shouldInvalidate = false;
-
-				if (map.containsKeyAndNotNull("constrain"))
-				{
-					KrollDict constraints = map.getKrollDict("constrain");
-					KrollDict xConstraint = constraints.getKrollDict("x");
-					KrollDict yConstraint = constraints.getKrollDict("y");
-					String constraintAxis = constraints.getString("axis");
-
-					if (xConstraint != null || (constraintAxis != null && constraintAxis.equals("x")))
-					{
-						shouldInvalidate = true;
-
-						Integer parentWidth = nativeView.getWidth(),
-								xStart = xConstraint.getInt("start"),
-								xEnd = xConstraint.getInt("end"),
-								parentMinLeft = weakConfig.getDimensionAsPixels("minLeft"),
-								parentMaxLeft = weakConfig.getDimensionAsPixels("maxLeft");
-
-						double proxyWidth = mappedView.getWidth(),
-							   xStartParallax = xStart / parallaxAmount,
-							   xRatio = proxyWidth / (parentWidth.doubleValue() / 2),
-							   xDistance = parentMaxLeft.doubleValue() - parentMinLeft.doubleValue(),
-							   xWidth = proxyWidth / parallaxAmount;
-
-						if (xStart != null || xEnd != null)
-						{
-							xWidth = Math.abs(xStartParallax) + Math.abs(xEnd.doubleValue());
-						}
-
-						if (parentMinLeft != null || parentMaxLeft != null)
-						{
-							xRatio = xDistance == 0 ? 1 : xWidth / xDistance;
-						}
-
-						newLeft -= translationLeft * xRatio;
-
-						if (newLeft < xStartParallax)
-						{
-							newLeft = xStartParallax;
-						}
-						else if (newLeft > xEnd.doubleValue())
-						{
-							newLeft = xEnd.doubleValue();
-						}
-					}
-					else if (constraintAxis.equals("x"))
-					{
-						shouldInvalidate = true;
-						newLeft -= translationLeft / parallaxAmount;
-					}
-
-					if (yConstraint != null || (constraintAxis != null && constraintAxis.equals("y")))
-					{
-						shouldInvalidate = true;
-
-						Integer parentHeight = nativeView.getHeight(),
-								yStart = yConstraint.getInt("start"),
-								yEnd = yConstraint.getInt("end"),
-								parentMinTop = weakConfig.getDimensionAsPixels("minTop"),
-								parentMaxTop = weakConfig.getDimensionAsPixels("maxTop");
-
-						double proxyHeight = mappedView.getHeight(),
-							   yStartParallax = yStart / parallaxAmount,
-							   yRatio = proxyHeight / (parentHeight.doubleValue() / 2),
-							   yDistance = parentMaxTop.doubleValue() - parentMinTop.doubleValue(),
-							   yHeight = proxyHeight / parallaxAmount;
-
-						if (yStart != null || yEnd != null)
-						{
-							yHeight = Math.abs(yStartParallax) + Math.abs(yEnd.doubleValue());
-						}
-
-						if (parentMinTop != null || parentMaxTop != null)
-						{
-							yRatio = yDistance == 0 ? 1 : yHeight / yDistance;
-						}
-
-						newTop -= translationTop * yRatio;
-
-						if (newTop < yStartParallax)
-						{
-							newTop = yStartParallax;
-						}
-						else if (newTop > yEnd.doubleValue())
-						{
-							newTop = yEnd.doubleValue();
-						}
-					}
-					else if (constraintAxis.equals("y"))
-					{
-						shouldInvalidate = true;
-						newTop -= translationTop / parallaxAmount;
-					}
-				}
-				else
-				{
-					shouldInvalidate = true;
-					newLeft -= translationLeft / parallaxAmount;
-					newTop -= translationTop / parallaxAmount;
-				}
-
-				if (shouldInvalidate)
-				{
-					mappedView.setX((float) newLeft);
-					mappedView.setY((float) newTop);
-
-					mappedProxy.setProperty("left", new Double(newLeft));
-					mappedProxy.setProperty("top", new Double(newTop));
-
-					mappedView.invalidate();
-				}
-			}
-		}
-	}
-
-	protected void prepareMappedProxies(ConfigProxy configProxy)
-	{
-		KrollDict configProps = configProxy.getProperties();
-		Object[] maps = (Object[]) configProps.get("maps");
-
-		if (maps != null)
-		{
-			for (int i = 0; i < maps.length; i++)
-			{
-				@SuppressWarnings("unchecked")
-				KrollDict map = new KrollDict((Map<? extends String, ? extends Object>) maps[i]);
+				@SuppressWarnings({ "rawtypes", "unchecked" })
+				KrollDict map = new KrollDict((HashMap) mapObject);
 				TiViewProxy mappedProxy = (TiViewProxy) map.get("view");
 				View mappedView = mappedProxy.peekView().getOuterView();
 
 				if (map.containsKeyAndNotNull("constrain"))
 				{
+					View parentView = this.getConfig().getDecorView();
 					KrollDict constraints = map.getKrollDict("constrain");
 					KrollDict constraintX = constraints.getKrollDict("x");
 					KrollDict constraintY = constraints.getKrollDict("y");
-
-					double proxyWidth = mappedView.getWidth(),
-						   proxyHeight = mappedView.getHeight(),
-						   parallaxAmount = map.optInt("parallaxAmount", 1),
-						   newLeft = 0,
-						   newTop = 0;
-
+					
 					boolean didModifyPosition = false;
 
-					if (constraintX != null)
+					double parallaxAmount = map.containsKeyAndNotNull("parallaxAmount") ? TiConvert.toDouble(map, "parallaxAmount") : 1;
+					double newLeft = 0;
+					double newTop = 0;
+
+					if (constraintX != null && constraintX.containsKeyAndNotNull("start"))
 					{
-						if (constraintX.containsKeyAndNotNull("start"))
+						double xStart = TiConvert.toTiDimension(constraintX, "start", TiDimension.TYPE_LEFT).getAsPixels(parentView);
+						
+						if (constraintX.containsKeyAndNotNull("end"))
 						{
-							didModifyPosition = true;
-							newLeft = TiConvert.toDouble(constraintX.get("start")) / parallaxAmount;
-							newLeft += proxyWidth;
+							double xEnd = TiConvert.toTiDimension(constraintX, "end", TiDimension.TYPE_LEFT).getAsPixels(parentView);
+							
+							newLeft = xStart / parallaxAmount - xEnd;
 						}
+						else
+						{
+							newLeft = mappedView.getLeft() / parallaxAmount;
+						}
+						
+						didModifyPosition = true;
 					}
 
-					if (constraintY != null)
+					if (constraintY != null && constraintY.containsKeyAndNotNull("start"))
 					{
-						if (constraintY.containsKeyAndNotNull("start"))
+						double yStart = TiConvert.toTiDimension(constraintX, "start", TiDimension.TYPE_TOP).getAsPixels(parentView);
+						
+						if (constraintY.containsKeyAndNotNull("end"))
 						{
-							didModifyPosition = true;
-							newTop = TiConvert.toDouble(constraintX.get("start")) / parallaxAmount;
-							newTop += proxyHeight;
+							double yEnd = TiConvert.toTiDimension(constraintX, "end", TiDimension.TYPE_TOP).getAsPixels(parentView);
+							
+							newTop = yStart / parallaxAmount - yEnd;
 						}
+						else
+						{
+							newTop = mappedView.getTop() / parallaxAmount;
+						}
+						
+						didModifyPosition = true;
 					}
 
 					if (didModifyPosition)
 					{
-						TiCompositeLayout.LayoutParams mappedLayout = (TiCompositeLayout.LayoutParams) mappedView.getLayoutParams();
-						mappedLayout.optionLeft = new TiDimension(newLeft, TiDimension.TYPE_LEFT);
-						mappedLayout.optionTop = new TiDimension(newTop, TiDimension.TYPE_TOP);
-
-						mappedView.setLayoutParams(mappedLayout);
+						this.setViewPosition(mappedProxy, mappedView, newLeft, newTop);
 					}
 				}
 			}
 		}
+	}
+	
+	protected void translateMappedProxies(double translationX, double translationY)
+	{
+		KrollDict configProps = this.getConfig().getProperties();
+
+		if (configProps.containsKeyAndNotNull("maps"))
+		{
+			for (Object mapObject : (Object[]) configProps.get("maps"))
+			{
+				@SuppressWarnings({ "rawtypes", "unchecked" })
+				KrollDict map = new KrollDict((HashMap) mapObject);
+				TiViewProxy mappedProxy = (TiViewProxy) map.get("view");
+				View mappedView = mappedProxy.peekView().getOuterView();
+				double parallaxAmount = map.containsKeyAndNotNull("parallaxAmount") ? TiConvert.toDouble(map, "parallaxAmount") : 1;
+				
+				translationX = mappedView.getTranslationX() - translationX / parallaxAmount;
+				translationY = mappedView.getTranslationY() - translationY / parallaxAmount;
+
+				mappedView.setTranslationX((float) translationX);
+				mappedView.setTranslationY((float) translationY);
+			}
+		}
+	}
+	
+	protected void finalizeMappedTranslations()
+	{
+		KrollDict configProps = this.getConfig().getProperties();
+
+		if (configProps.containsKeyAndNotNull("maps"))
+		{
+			for (Object mapObject : (Object[]) configProps.get("maps"))
+			{
+				@SuppressWarnings({ "rawtypes", "unchecked" })
+				KrollDict map = new KrollDict((HashMap) mapObject);
+				TiViewProxy mappedProxy = (TiViewProxy) map.get("view");
+				View mappedView = mappedProxy.peekView().getOuterView();
+				
+				this.setViewPosition(mappedProxy, mappedView, mappedView.getX(), mappedView.getY());
+			}
+		}
+	}
+	
+	protected void setViewPosition(KrollProxy proxy, View view, double left, double top)
+	{
+		TiCompositeLayout.LayoutParams layout = (TiCompositeLayout.LayoutParams) view.getLayoutParams();
+
+		layout.optionLeft = new TiDimension(left, TiDimension.TYPE_LEFT);
+		layout.optionTop = new TiDimension(top, TiDimension.TYPE_TOP);
+
+		view.setLayoutParams(layout);
+		view.setTranslationX(0);
+		view.setTranslationY(0);
+		
+		proxy.setProperty("left", left);
+		proxy.setProperty("top", top);
+	}
+	
+	protected ConfigProxy getConfig()
+	{
+		return this.config.get();
 	}
 }
