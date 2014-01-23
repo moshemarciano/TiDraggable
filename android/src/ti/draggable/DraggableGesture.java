@@ -206,8 +206,21 @@ public class DraggableGesture implements OnTouchListener
 			double translationTop = lastTop - topEdge;
 
 			translateMappedProxies(translationLeft, translationTop);
+			
+			Float ensureRightValue = null;
+			Float ensureBottomValue = null;
+			
+			if (TiConvert.toBoolean(configProps, "ensureRight"))
+			{
+				ensureRightValue = (float) -leftEdge;
+			}
+			
+			if (TiConvert.toBoolean(configProps, "ensureBottom"))
+			{
+				ensureBottomValue = (float) -topEdge;
+			}
 
-			this.setViewPosition(draggableProxy, viewToDrag, leftEdge, topEdge);
+			this.setViewPosition(draggableProxy, viewToDrag, (float) topEdge, (float) leftEdge, ensureBottomValue, ensureRightValue);
 
 			distanceX += Math.abs(lastLeft - leftEdge);
 			distanceY += Math.abs(lastTop - topEdge);
@@ -374,7 +387,7 @@ public class DraggableGesture implements OnTouchListener
 
 					if (didModifyPosition)
 					{
-						this.setViewPosition(mappedProxy, mappedView, newLeft, newTop);
+						this.setViewPosition(mappedProxy, mappedView, (float) newTop, (float) newLeft, null, null);
 					}
 				}
 			}
@@ -417,17 +430,27 @@ public class DraggableGesture implements OnTouchListener
 				TiViewProxy mappedProxy = (TiViewProxy) map.get("view");
 				View mappedView = mappedProxy.peekView().getOuterView();
 				
-				this.setViewPosition(mappedProxy, mappedView, mappedView.getX(), mappedView.getY());
+				this.setViewPosition(mappedProxy, mappedView, mappedView.getY(), mappedView.getX(), null, null);
 			}
 		}
 	}
 	
-	protected void setViewPosition(KrollProxy proxy, View view, double left, double top)
+	protected void setViewPosition(KrollProxy proxy, View view, Float top, Float left, Float bottom, Float right)
 	{
 		TiCompositeLayout.LayoutParams layout = (TiCompositeLayout.LayoutParams) view.getLayoutParams();
 
 		layout.optionLeft = new TiDimension(left, TiDimension.TYPE_LEFT);
 		layout.optionTop = new TiDimension(top, TiDimension.TYPE_TOP);
+		
+		if (right != null)
+		{
+			layout.optionRight = new TiDimension(right, TiDimension.TYPE_RIGHT);
+		}
+		
+		if (bottom != null)
+		{
+			layout.optionBottom = new TiDimension(bottom, TiDimension.TYPE_BOTTOM);
+		}
 
 		view.setLayoutParams(layout);
 		view.setTranslationX(0);
@@ -435,6 +458,16 @@ public class DraggableGesture implements OnTouchListener
 		
 		proxy.setProperty("left", left);
 		proxy.setProperty("top", top);
+		
+		if (right != null)
+		{
+			proxy.setProperty("right", right);
+		}
+		
+		if (bottom != null)
+		{
+			proxy.setProperty("bottom", bottom);
+		}
 	}
 	
 	protected ConfigProxy getConfig()
